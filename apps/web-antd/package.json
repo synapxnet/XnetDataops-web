@@ -1,0 +1,60 @@
+{
+  "name": "@vben/web-antd",
+  "version": "5.5.3",
+  "homepage": "https://www.xnetdataops.synapxnet.cn",
+  "bugs": "https://github.com/synapxnet/XnetDataops-web/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/synapxnet/XnetDataops-web.git",
+    "directory": "apps/web-antd"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "SynapXnet",
+    "url": "https://openxnet.synapxnet.com"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "pnpm vite build --mode production",
+    "build:analyze": "pnpm vite build --mode analyze",
+    "dev": "pnpm vite --mode development",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit --skipLibCheck"
+  },
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "dependencies": {
+    "@ant-design/icons-vue": "^6.1.0",
+    "@vben/access": "workspace:*",
+    "@vben/common-ui": "workspace:*",
+    "@vben/constants": "workspace:*",
+    "@vben/hooks": "workspace:*",
+    "@vben/icons": "workspace:*",
+    "@vben/layouts": "workspace:*",
+    "@vben/locales": "workspace:*",
+    "@vben/plugins": "workspace:*",
+    "@vben/preferences": "workspace:*",
+    "@vben/request": "workspace:*",
+    "@vben/stores": "workspace:*",
+    "@vben/styles": "workspace:*",
+    "@vben/types": "workspace:*",
+    "@vben/utils": "workspace:*",
+    "@vue-flow/background": "^1.3.2",
+    "@vue-flow/controls": "^1.1.2",
+    "@vue-flow/core": "^1.41.3",
+    "@vue-flow/minimap": "^1.5.2",
+    "@vueuse/core": "catalog:",
+    "ant-design-vue": "catalog:",
+    "dayjs": "catalog:",
+    "element-plus": "^2.9.10",
+    "pinia": "catalog:",
+    "uuid": "^9.0.1",
+    "vue": "catalog:",
+    "vue-router": "catalog:"
+  },
+  "devDependencies": {
+    "@types/three": "^0.182.0",
+    "@types/uuid": "^9.0.8"
+  }
+}

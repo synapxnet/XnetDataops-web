@@ -1,0 +1,36 @@
+{
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "codeLogin": "Code Login",
+    "qrcodeLogin": "Qr Code Login",
+    "forgetPassword": "Forget Password"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "analytics": "Analytics",
+    "workspace": "Workspace"
+  },
+  "DPP": {
+    "title": "Data Processing Platform(DPP)"
+  },
+  "MTP": {
+    "title": "Model Training Platform(MTP)"
+  },
+  "MRP": {
+    "title": "Model Reasoning Platform(MRP)"
+  },
+  "RMP": {
+    "title": "Rights Management Platform(RMP)"
+  },
+  "XAA": {
+    "title": "Xnet AI Agent(XAA)",
+    "workflow": "Workflow Management",
+    "workflowCreate": "Create Workflow",
+    "workflowEdit": "Edit Workflow",
+    "workflowDesigner": "Workflow Designer",
+    "executions": "Execution History",
+    "executionDetail": "Execution Detail",
+    "skill": "Skill Management"
+  }
+}

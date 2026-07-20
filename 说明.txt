@@ -1,0 +1,4 @@
+D:\D4I\vue-vben-admin\apps\web-antd\src\router\routes\core.ts
+增加路由
+D:\D4I\vue-vben-admin\docs\src\guide\essentials\icons.md
+增加图标
