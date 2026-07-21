@@ -16,7 +16,20 @@ import {
   AuditOutlined,
   TeamOutlined,
 } from '@ant-design/icons-vue';
-import { dsmRequestClient, dimRequestClient, ddvRequestClient, tskRequestClient, dqmRequestClient, dgvRequestClient, dasRequestClient } from '#/api/request';
+import {
+  dapRequestClient,
+  dasRequestClient,
+  dauRequestClient,
+  ddvRequestClient,
+  dgvRequestClient,
+  dimRequestClient,
+  dmsRequestClient,
+  dobRequestClient,
+  dqmRequestClient,
+  dsmRequestClient,
+  requestClient,
+  tskRequestClient,
+} from '#/api/request';
 
 const router = useRouter();
 
@@ -76,37 +89,26 @@ const statusColorMap: Record<string, string> = {
 };
 
 async function fetchStats() {
-  try {
-    const [dsm, dim, ddv, tsk, dqm, dgv] = await Promise.allSettled([
-      dsmRequestClient.get('/datasources'),
-      dimRequestClient.get('/tasks'),
-      ddvRequestClient.get('/scripts'),
-      tskRequestClient.get('/workflows'),
-      dqmRequestClient.get('/rules'),
-      dgvRequestClient.get('/tables'),
-    ]);
-    const getValue = (r: PromiseSettledResult<any>) =>
-      r.status === 'fulfilled' && Array.isArray(r.value) ? r.value.length : 0;
-    stats.value[0]!.value = getValue(dsm);
-    stats.value[1]!.value = getValue(dim);
-    stats.value[2]!.value = getValue(ddv);
-    stats.value[3]!.value = getValue(tsk);
-    stats.value[4]!.value = getValue(dqm);
-    stats.value[5]!.value = getValue(dgv);
-  } catch (_e) {
-    // stats remain 0 on error
-  }
+  const results = await Promise.allSettled([
+    dsmRequestClient.get('/datasources'),
+    dimRequestClient.get('/tasks'),
+    ddvRequestClient.get('/scripts'),
+    tskRequestClient.get('/workflows'),
+    dqmRequestClient.get('/rules'),
+    dgvRequestClient.get('/tables'),
+    dasRequestClient.get('/assets'),
+    dapRequestClient.get('/configs'),
+    dmsRequestClient.get('/rules'),
+    dobRequestClient.get('/monitors'),
+    dauRequestClient.get('/audit-logs'),
+    requestClient.get('/users'),
+  ]);
 
-  try {
-    const [das] = await Promise.allSettled([
-      dasRequestClient.get('/assets'),
-    ]);
-    const getValue = (r: PromiseSettledResult<any>) =>
-      r.status === 'fulfilled' && Array.isArray(r.value) ? r.value.length : 0;
-    stats.value[6]!.value = getValue(das);
-  } catch (_e) {
-    // ignore
-  }
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+      stats.value[index]!.value = result.value.length;
+    }
+  });
 }
 
 async function fetchRecentData() {
