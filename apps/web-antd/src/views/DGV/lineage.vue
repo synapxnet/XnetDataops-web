@@ -57,7 +57,7 @@ onMounted(() => { fetchList(); });
           </template>
         </template>
       </Table>
-      <div style="margin-top: 16px; padding: 40px; border: 1px dashed #d9d9d9; border-radius: 8px; text-align: center; color: #999;">
+      <div class="text-muted-foreground border-border mt-4 rounded-lg border border-dashed p-10 text-center">
         可视化血缘图（可接入 AntV G6 实现）
       </div>
     </Card>

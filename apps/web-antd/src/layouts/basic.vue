@@ -4,9 +4,8 @@ import type { NotificationItem } from '@vben/layouts';
 import { computed, provide, ref, watch } from 'vue';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
-import { VBEN_DOC_URL, VBEN_GITHUB_URL } from '@vben/constants';
 import { useWatermark } from '@vben/hooks';
-import { BookOpenText, CircleHelp, MdiGithub } from '@vben/icons';
+import { BookOpenText, MdiGithub } from '@vben/icons';
 import {
   BasicLayout,
   LockScreen,
@@ -17,13 +16,16 @@ import { preferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
 
-import { $t } from '#/locales';
 import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
+const OPENXNET_URL = 'https://openxnet.synapxnet.com';
+const FRONTEND_REPOSITORY_URL = 'https://github.com/synapxnet/XnetDataops-web';
+const BACKEND_REPOSITORY_URL = 'https://github.com/synapxnet/XnetDataops';
+
 const notifications = ref<NotificationItem[]>([
   {
-    avatar: 'https://avatar.vercel.sh/vercel.svg?text=VB',
+    avatar: 'https://avatar.vercel.sh/synapxnet.svg?text=SX',
     date: '3小时前',
     isRead: true,
     message: '描述信息描述信息描述信息',
@@ -63,30 +65,30 @@ const showDot = computed(() =>
 const menus = computed(() => [
   {
     handler: () => {
-      openWindow(VBEN_DOC_URL, {
+      openWindow(OPENXNET_URL, {
         target: '_blank',
       });
     },
     icon: BookOpenText,
-    text: $t('ui.widgets.document'),
+    text: 'OpenXnet 开源社区',
   },
   {
     handler: () => {
-      openWindow(VBEN_GITHUB_URL, {
+      openWindow(FRONTEND_REPOSITORY_URL, {
         target: '_blank',
       });
     },
     icon: MdiGithub,
-    text: 'GitHub',
+    text: 'XnetDataops Web 源码',
   },
   {
     handler: () => {
-      openWindow(`${VBEN_GITHUB_URL}/issues`, {
+      openWindow(BACKEND_REPOSITORY_URL, {
         target: '_blank',
       });
     },
-    icon: CircleHelp,
-    text: $t('ui.widgets.qa'),
+    icon: MdiGithub,
+    text: 'XnetDataops 后端源码',
   },
 ]);
 
@@ -126,16 +128,14 @@ provide('currentUserInfo', userInfo);
 </script>
 
 <template>
-  <BasicLayout
-    @clear-preferences-and-logout="handleLogout"
-  >
+  <BasicLayout @clear-preferences-and-logout="handleLogout">
     <template #user-dropdown>
       <UserDropdown
         :avatar
         :menus
         :text="userStore.userInfo?.realName"
-        description="ann.vben@gmail.com"
-        tag-text="Pro"
+        description="SynapXnet 开源团队"
+        tag-text="1.0.0"
         @logout="handleLogout"
       />
     </template>

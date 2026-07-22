@@ -17,6 +17,7 @@ const {
   handleSendCode = async () => {},
   loading = false,
   maxTime = 60,
+  showSendButton = true,
 } = defineProps<PinInputProps>();
 
 const emit = defineEmits<{
@@ -45,6 +46,7 @@ watch(
   () => {
     inputValue.value = modelValue.value?.split('') ?? [];
   },
+  { immediate: true },
 );
 
 watch(inputValue, (val) => {
@@ -98,7 +100,7 @@ const id = useId();
     @complete="handleComplete"
   >
     <div class="relative flex w-full">
-      <PinInputGroup class="mr-2">
+      <PinInputGroup :class="{ 'mr-2': showSendButton }">
         <PinInputInput
           v-for="(item, index) in codeLength"
           :key="item"
@@ -106,6 +108,7 @@ const id = useId();
         />
       </PinInputGroup>
       <VbenButton
+        v-if="showSendButton"
         :disabled="disabled"
         :loading="btnLoading"
         class="flex-grow"

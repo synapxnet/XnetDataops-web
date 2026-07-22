@@ -8,6 +8,8 @@ import { App, ConfigProvider, theme } from 'ant-design-vue';
 
 import { antdLocale } from '#/locales';
 
+import './theme-parity.css';
+
 defineOptions({ name: 'App' });
 
 const { isDark } = usePreferences();

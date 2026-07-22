@@ -1,18 +1,17 @@
 {
   "name": "@vben/web-antd",
   "version": "5.5.3",
-  "homepage": "https://vben.pro",
-  "bugs": "https://github.com/vbenjs/vue-vben-admin/issues",
+  "homepage": "https://www.xnetdataops.synapxnet.cn",
+  "bugs": "https://github.com/synapxnet/XnetDataops-web/issues",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vbenjs/vue-vben-admin.git",
+    "url": "git+https://github.com/synapxnet/XnetDataops-web.git",
     "directory": "apps/web-antd"
   },
   "license": "MIT",
   "author": {
-    "name": "vben",
-    "email": "ann.vben@gmail.com",
-    "url": "https://github.com/anncwb"
+    "name": "SynapXnet",
+    "url": "https://openxnet.synapxnet.com"
   },
   "type": "module",
   "scripts": {

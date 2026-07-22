@@ -519,14 +519,14 @@ onMounted(() => {
         <div ref="messageContainerRef" class="chat-messages">
           <!-- 欢迎消息 -->
           <div v-if="messages.length === 0 && !assistant" class="welcome-message">
-            <RobotOutlined style="font-size: 48px; color: #ccc;" />
-            <p class="text-gray-400 mt-2">未找到默认助手，请先在智能助手页面设置一个默认助手</p>
+            <RobotOutlined class="empty-assistant-icon" />
+            <p class="text-muted-foreground mt-2">未找到默认助手，请先在智能助手页面设置一个默认助手</p>
           </div>
           <div v-else-if="messages.length === 0" class="welcome-message">
             <Avatar :size="48" class="mb-2" :style="{ backgroundColor: primaryColor }">
               <RobotOutlined />
             </Avatar>
-            <p class="text-gray-600">
+            <p class="text-muted-foreground">
               {{ assistant?.welcomeMessage || '你好！我是你的AI助手，有什么可以帮助你的吗？' }}
             </p>
           </div>
@@ -643,7 +643,9 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #fff;
+  color: hsl(var(--card-foreground));
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   overflow: hidden;
@@ -671,7 +673,7 @@ export default {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
-  background: #f5f7fa;
+  background: hsl(var(--muted) / 35%);
 }
 
 .is-minimized .chat-messages {
@@ -681,6 +683,11 @@ export default {
 .welcome-message {
   text-align: center;
   padding: 32px 16px;
+}
+
+.empty-assistant-icon {
+  font-size: 48px;
+  color: hsl(var(--muted-foreground));
 }
 
 .message-item {
@@ -697,7 +704,9 @@ export default {
   max-width: 70%;
   padding: 10px 14px;
   border-radius: 12px;
-  background: #fff;
+  color: hsl(var(--card-foreground));
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   font-size: 14px;
   line-height: 1.5;
@@ -707,6 +716,7 @@ export default {
 
 .message-item.is-user .message-content {
   color: #fff;
+  border-color: transparent;
   box-shadow: none;
 }
 
@@ -721,8 +731,8 @@ export default {
   display: flex;
   gap: 8px;
   padding: 12px 16px;
-  border-top: 1px solid #eee;
-  background: #fff;
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
 }
 
 .is-minimized .chat-input {

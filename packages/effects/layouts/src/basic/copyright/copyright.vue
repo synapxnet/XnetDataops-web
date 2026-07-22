@@ -12,9 +12,9 @@ defineOptions({
 });
 
 withDefaults(defineProps<Props>(), {
-  companyName: 'Vben Admin',
-  companySiteLink: '',
-  date: '2024',
+  companyName: 'SynapXnet',
+  companySiteLink: 'https://openxnet.synapxnet.com',
+  date: '2026',
   icp: '',
   icpLink: '',
 });

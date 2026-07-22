@@ -3,17 +3,14 @@ import type { AboutProps, DescriptionItem } from './about';
 
 import { h } from 'vue';
 
-import {
-  VBEN_DOC_URL,
-  VBEN_GITHUB_URL,
-  VBEN_PREVIEW_URL,
-} from '@vben/constants';
-
 import { VbenRenderContent } from '@vben-core/shadcn-ui';
 
 import { Page } from '../../components';
 
 interface Props extends AboutProps {}
+
+const OPENXNET_URL = 'https://openxnet.synapxnet.com';
+const VUE_VBEN_ADMIN_URL = 'https://github.com/vbenjs/vue-vben-admin';
 
 defineOptions({
   name: 'AboutUI',
@@ -21,8 +18,8 @@ defineOptions({
 
 withDefaults(defineProps<Props>(), {
   description:
-    '是一个现代化开箱即用的中后台解决方案，采用最新的技术栈，包括 Vue 3.0、Vite、TailwindCSS 和 TypeScript 等前沿技术，代码规范严谨，提供丰富的配置选项，旨在为中大型项目的开发提供现成的开箱即用解决方案及丰富的示例，同时，它也是学习和深入前端技术的一个极佳示例。',
-  name: 'Vben Admin',
+    '是 SynapXnet 团队持续维护的企业级多租户、前后端分离开源平台。前端采用 Vue Vben Admin 框架，并保留上游 MIT 许可声明。',
+  name: 'SynapXnet',
   title: '关于项目',
 });
 
@@ -62,7 +59,7 @@ const {
   // vite inject-metadata 插件注入的全局变量
 } = __VBEN_ADMIN_METADATA__ || {};
 
-const vbenDescriptionItems: DescriptionItem[] = [
+const projectDescriptionItems: DescriptionItem[] = [
   {
     content: version,
     title: '版本号',
@@ -80,16 +77,12 @@ const vbenDescriptionItems: DescriptionItem[] = [
     title: '主页',
   },
   {
-    content: renderLink(VBEN_DOC_URL, '点击查看'),
-    title: '文档地址',
+    content: renderLink(OPENXNET_URL, '点击查看'),
+    title: 'OpenXnet',
   },
   {
-    content: renderLink(VBEN_PREVIEW_URL, '点击查看'),
-    title: '预览地址',
-  },
-  {
-    content: renderLink(VBEN_GITHUB_URL, '点击查看'),
-    title: 'Github',
+    content: renderLink(VUE_VBEN_ADMIN_URL, '点击查看'),
+    title: '前端框架',
   },
   {
     content: h('div', [
@@ -115,7 +108,7 @@ const devDependenciesItems = Object.keys(devDependencies).map((key) => ({
   <Page :title="title">
     <template #description>
       <p class="text-foreground mt-3 text-sm leading-6">
-        <a :href="VBEN_GITHUB_URL" class="vben-link" target="_blank">
+        <a :href="OPENXNET_URL" class="vben-link" target="_blank">
           {{ name }}
         </a>
         {{ description }}
@@ -127,7 +120,7 @@ const devDependenciesItems = Object.keys(devDependencies).map((key) => ({
       </div>
       <div class="mt-4">
         <dl class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          <template v-for="item in vbenDescriptionItems" :key="item.title">
+          <template v-for="item in projectDescriptionItems" :key="item.title">
             <div class="border-border border-t px-4 py-6 sm:col-span-1 sm:px-0">
               <dt class="text-foreground text-sm font-medium leading-6">
                 {{ item.title }}

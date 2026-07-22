@@ -170,25 +170,25 @@ onMounted(() => {
             <Col :span="6">
               <div style="text-align: center;">
                 <Progress type="circle" :percent="95" :stroke-color="'#52c41a'" :size="80" />
-                <div style="margin-top: 8px; color: #666;">数据源可用</div>
+                <div class="text-muted-foreground mt-2">数据源可用</div>
               </div>
             </Col>
             <Col :span="6">
               <div style="text-align: center;">
                 <Progress type="circle" :percent="88" :stroke-color="'#1890ff'" :size="80" />
-                <div style="margin-top: 8px; color: #666;">同步成功率</div>
+                <div class="text-muted-foreground mt-2">同步成功率</div>
               </div>
             </Col>
             <Col :span="6">
               <div style="text-align: center;">
                 <Progress type="circle" :percent="92" :stroke-color="'#722ed1'" :size="80" />
-                <div style="margin-top: 8px; color: #666;">质量通过率</div>
+                <div class="text-muted-foreground mt-2">质量通过率</div>
               </div>
             </Col>
             <Col :span="6">
               <div style="text-align: center;">
                 <Progress type="circle" :percent="97" :stroke-color="'#faad14'" :size="80" />
-                <div style="margin-top: 8px; color: #666;">SLA达标率</div>
+                <div class="text-muted-foreground mt-2">SLA达标率</div>
               </div>
             </Col>
           </Row>
@@ -212,7 +212,7 @@ onMounted(() => {
             </Table>
           </template>
           <template v-else>
-            <p style="color: #999; text-align: center; padding: 30px 0;">暂无告警</p>
+            <p class="text-muted-foreground py-[30px] text-center">暂无告警</p>
           </template>
         </Card>
       </Col>
@@ -228,7 +228,7 @@ onMounted(() => {
             </Table>
           </template>
           <template v-else>
-            <p style="color: #999; text-align: center; padding: 30px 0;">暂无数据</p>
+            <p class="text-muted-foreground py-[30px] text-center">暂无数据</p>
           </template>
         </Card>
       </Col>
