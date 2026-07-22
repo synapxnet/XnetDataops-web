@@ -31,11 +31,11 @@ onMounted(async () => {
           <Button @click="router.back()">返回</Button>
         </Space>
       </template>
-      <div style="min-height: 400px; display: flex; align-items: center; justify-content: center; border: 1px dashed #d9d9d9; border-radius: 8px; color: #999;">
+      <div class="text-muted-foreground border-border flex min-h-[400px] items-center justify-center rounded-lg border border-dashed">
         <div style="text-align: center;">
           <p style="font-size: 16px;">DAG 可视化编排区域</p>
           <p>节点数量: {{ nodes.length }} | 连线数量: {{ edges.length }}</p>
-          <p style="font-size: 12px; color: #bbb;">可接入 AntV X6 或 vue-flow 实现可视化 DAG 编排</p>
+          <p class="text-muted-foreground text-xs">可接入 AntV X6 或 vue-flow 实现可视化 DAG 编排</p>
         </div>
       </div>
     </Card>

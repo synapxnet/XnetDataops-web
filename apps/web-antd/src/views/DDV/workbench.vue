@@ -46,7 +46,7 @@ async function handleExecute() {
       <Card v-if="resultColumns.length > 0" title="查询结果" size="small">
         <Table :columns="resultColumns" :data-source="results" size="small" :scroll="{ x: true }" />
       </Card>
-      <div v-else style="color: #999; text-align: center; padding: 40px 0;">
+      <div v-else class="text-muted-foreground py-10 text-center">
         执行SQL查看结果
       </div>
     </Card>
