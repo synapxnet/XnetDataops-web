@@ -46,24 +46,24 @@ const showTheme = computed(() => props.toolbarList.includes('theme'));
 <style scoped>
 .auth-toolbar {
   position: absolute;
-  top: 18px;
-  right: 18px;
+  top: 44px;
+  right: clamp(40px, 4vw, 68px);
   z-index: 30;
   display: flex;
   min-height: 36px;
   align-items: center;
   padding: 2px 6px;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid var(--auth-panel-border);
   border-radius: 6px;
-  color: hsl(var(--muted-foreground));
-  background: hsl(var(--background) / 88%);
-  box-shadow: 0 8px 22px hsl(var(--foreground) / 6%);
+  color: hsl(var(--foreground));
+  background: var(--auth-panel-bg);
+  box-shadow: 0 8px 22px var(--auth-panel-shadow);
 }
 
 @media (max-width: 480px) {
   .auth-toolbar {
-    top: 16px;
-    right: 14px;
+    top: 26px;
+    right: 26px;
   }
 }
 </style>

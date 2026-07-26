@@ -30,12 +30,18 @@ defineOptions({
 <style scoped>
 .auth-form-view {
   position: relative;
+  box-sizing: border-box;
   display: flex;
-  min-height: 100dvh;
+  min-height: calc(100dvh - 56px);
   align-items: center;
   justify-content: center;
-  padding: 92px clamp(32px, 5vw, 72px) 64px;
-  background: hsl(var(--background));
+  padding: 88px clamp(32px, 4vw, 64px) 64px;
+  border: 1px solid var(--auth-panel-border);
+  border-radius: 8px;
+  background: var(--auth-panel-bg);
+  box-shadow:
+    0 24px 64px var(--auth-panel-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 10%);
 }
 
 .auth-form-inner {
@@ -72,7 +78,8 @@ defineOptions({
 @media (max-width: 480px) {
   .auth-form-view {
     align-items: flex-start;
-    padding: 116px 20px 64px;
+    min-height: calc(100dvh - 24px);
+    padding: 112px 20px 64px;
   }
 }
 

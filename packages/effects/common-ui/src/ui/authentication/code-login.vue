@@ -61,6 +61,7 @@ const [Form, formApi] = useVbenForm(
       hideLabel: false,
       hideRequiredMark: true,
     },
+    layout: 'vertical',
     schema: computed(() => props.formSchema),
     showDefaultActions: false,
   }),
@@ -144,7 +145,46 @@ defineExpose({
 }
 
 .auth-submit-button {
+  border-color: var(--auth-accent) !important;
+  color: #f7fbfc !important;
+  background: var(--auth-accent) !important;
   box-shadow: 0 8px 20px color-mix(in srgb, var(--auth-accent) 22%, transparent);
+}
+
+.auth-submit-button:hover {
+  border-color: color-mix(in srgb, var(--auth-accent) 88%, #0a1520) !important;
+  background: color-mix(in srgb, var(--auth-accent) 88%, #0a1520) !important;
+}
+
+.auth-back-button {
+  border-color: var(--auth-panel-border) !important;
+  background: transparent !important;
+}
+
+.auth-back-button:hover {
+  color: var(--auth-accent) !important;
+  background: color-mix(in srgb, var(--auth-accent) 8%, transparent) !important;
+}
+
+.auth-code-login :deep(input) {
+  min-height: 44px;
+  border-color: var(--auth-panel-border);
+  background: color-mix(
+    in srgb,
+    var(--auth-panel-bg) 88%,
+    hsl(var(--background))
+  );
+}
+
+.auth-code-login :deep(input:focus) {
+  border-color: var(--auth-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-accent) 14%, transparent);
+}
+
+.auth-code-login :deep(label) {
+  color: hsl(var(--foreground));
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .auth-submit-button:active,

@@ -103,24 +103,91 @@ const shellStyle = computed(() => ({
 
 <style scoped>
 .auth-shell {
+  --auth-panel-bg: color-mix(
+    in srgb,
+    hsl(var(--background)) 96%,
+    var(--auth-accent)
+  );
+  --auth-panel-border: color-mix(
+    in srgb,
+    var(--auth-accent) 18%,
+    hsl(var(--border))
+  );
+  --auth-panel-shadow: color-mix(
+    in srgb,
+    var(--auth-brand-surface) 14%,
+    transparent
+  );
+  --auth-story-heading: color-mix(
+    in srgb,
+    var(--auth-brand-surface) 82%,
+    hsl(var(--foreground))
+  );
+  --auth-story-muted: color-mix(
+    in srgb,
+    hsl(var(--muted-foreground)) 88%,
+    var(--auth-accent)
+  );
   position: relative;
+  isolation: isolate;
   display: grid;
   min-height: 100dvh;
-  grid-template-columns: minmax(0, 1.12fr) minmax(420px, 0.88fr);
+  grid-template-columns: minmax(0, 1.16fr) minmax(440px, 0.84fr);
   overflow: hidden;
   color: hsl(var(--foreground));
-  background: hsl(var(--background));
+  background: linear-gradient(
+    112deg,
+    color-mix(in srgb, var(--auth-accent) 10%, hsl(var(--background))) 0%,
+    color-mix(in srgb, var(--auth-accent) 4%, hsl(var(--background))) 52%,
+    hsl(var(--background)) 100%
+  );
+}
+
+.auth-shell::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--auth-accent) 7%, transparent),
+    transparent 48%
+  );
+  content: '';
+  pointer-events: none;
+}
+
+.auth-shell--dark {
+  --auth-panel-bg: color-mix(
+    in srgb,
+    var(--auth-brand-surface) 84%,
+    hsl(var(--background))
+  );
+  --auth-panel-border: color-mix(
+    in srgb,
+    var(--auth-accent) 28%,
+    rgb(255 255 255 / 14%)
+  );
+  --auth-panel-shadow: rgb(0 0 0 / 28%);
+  --auth-story-heading: #edf5f6;
+  --auth-story-muted: rgb(230 240 243 / 72%);
+  background: linear-gradient(
+    112deg,
+    color-mix(in srgb, var(--auth-brand-surface) 88%, var(--auth-accent)) 0%,
+    var(--auth-brand-surface) 54%,
+    color-mix(in srgb, var(--auth-brand-surface) 74%, hsl(var(--background)))
+      100%
+  );
 }
 
 .auth-brand-mark {
   position: absolute;
-  top: 24px;
-  left: 28px;
+  top: 28px;
+  left: 36px;
   z-index: 20;
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #eef6f7;
+  color: var(--auth-story-heading);
 }
 
 .auth-brand-mark img {
@@ -138,7 +205,7 @@ const shellStyle = computed(() => ({
 }
 
 .auth-brand-mark span {
-  color: rgb(231 241 244 / 66%);
+  color: var(--auth-story-muted);
   font-size: 11px;
 }
 
@@ -148,9 +215,7 @@ const shellStyle = computed(() => ({
   min-height: 100dvh;
   padding: 116px clamp(36px, 5vw, 78px) 40px;
   overflow: hidden;
-  color: #edf5f6;
-  background: var(--auth-brand-surface);
-  border-left: 4px solid var(--auth-accent);
+  color: var(--auth-story-heading);
 }
 
 .auth-story-copy {
@@ -169,6 +234,7 @@ const shellStyle = computed(() => ({
 
 .auth-story-copy h1 {
   margin: 0;
+  color: var(--auth-story-heading);
   font-size: clamp(38px, 4.1vw, 62px);
   font-weight: 720;
   letter-spacing: 0;
@@ -179,24 +245,32 @@ const shellStyle = computed(() => ({
   display: block;
   max-width: 46ch;
   margin-top: 18px;
-  color: rgb(230 240 243 / 72%);
+  color: var(--auth-story-muted);
   font-size: 15px;
   line-height: 1.75;
 }
 
 .auth-product-preview {
   position: absolute;
-  right: -12%;
+  right: -4%;
   bottom: -7%;
-  width: min(92%, 920px);
+  width: min(88%, 920px);
   aspect-ratio: 16 / 10;
   margin: 0;
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 18%);
+  border: 1px solid
+    color-mix(in srgb, var(--auth-accent) 24%, hsl(var(--border)));
   border-radius: 8px;
   background: #101921;
-  box-shadow: 0 32px 80px rgb(0 0 0 / 34%);
+  box-shadow: 0 32px 80px var(--auth-panel-shadow);
   transform: rotate(-1deg);
+  mask-image: linear-gradient(to right, black 0%, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black 0%,
+    black 88%,
+    transparent 100%
+  );
   animation: auth-preview-enter 620ms 80ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -213,13 +287,14 @@ const shellStyle = computed(() => ({
   bottom: 28px;
   left: clamp(36px, 5vw, 78px);
   z-index: 2;
-  color: rgb(231 241 244 / 54%);
+  color: var(--auth-story-muted);
   font-size: 12px;
 }
 
 .auth-form-panel {
+  align-self: center;
   min-width: 0;
-  min-height: 100dvh;
+  margin: 28px 28px 28px 8px;
 }
 
 @keyframes auth-enter {
@@ -254,18 +329,19 @@ const shellStyle = computed(() => ({
   }
 
   .auth-brand-mark {
-    color: hsl(var(--foreground));
+    top: 34px;
+    left: 32px;
   }
 
-  .auth-brand-mark span {
-    color: hsl(var(--muted-foreground));
+  .auth-form-panel {
+    margin: 12px;
   }
 }
 
 @media (max-width: 480px) {
   .auth-brand-mark {
-    top: 18px;
-    left: 20px;
+    top: 30px;
+    left: 28px;
   }
 
   .auth-brand-mark img {
