@@ -58,7 +58,7 @@ const router = useRouter();
 const [Form, formApi] = useVbenForm(
   reactive({
     commonConfig: {
-      hideLabel: true,
+      hideLabel: false,
       hideRequiredMark: true,
     },
     schema: computed(() => props.formSchema),
@@ -84,10 +84,11 @@ defineExpose({
 </script>
 
 <template>
-  <div>
+  <div class="auth-code-login">
+    <p class="auth-mode-label">{{ $t('authentication.mobileLogin') }}</p>
     <Title>
       <slot name="title">
-        {{ title || $t('authentication.welcomeBack') }} 📲
+        {{ title || $t('authentication.welcomeBack') }}
       </slot>
       <template #desc>
         <span class="text-muted-foreground">
@@ -103,15 +104,58 @@ defineExpose({
         'cursor-wait': loading,
       }"
       :loading="loading"
-      class="w-full"
+      class="auth-submit-button w-full"
       @click="handleSubmit"
     >
       <slot name="submitButtonText">
         {{ submitButtonText || $t('common.login') }}
       </slot>
     </VbenButton>
-    <VbenButton class="mt-4 w-full" variant="outline" @click="goToLogin()">
+    <VbenButton
+      class="auth-back-button mt-3 w-full"
+      variant="outline"
+      @click="goToLogin()"
+    >
       {{ $t('common.back') }}
     </VbenButton>
   </div>
 </template>
+
+<style scoped>
+.auth-code-login {
+  width: 100%;
+}
+
+.auth-mode-label {
+  margin: 0 0 10px;
+  color: var(--auth-accent);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.auth-submit-button,
+.auth-back-button {
+  min-height: 44px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.auth-submit-button {
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--auth-accent) 22%, transparent);
+}
+
+.auth-submit-button:active,
+.auth-back-button:active {
+  transform: translateY(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-submit-button,
+  .auth-back-button {
+    transition: none;
+  }
+}
+</style>
