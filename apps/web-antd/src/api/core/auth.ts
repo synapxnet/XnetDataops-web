@@ -47,8 +47,11 @@ export async function refreshTokenApi() {
 /**
  * 退出登录
  */
-export async function logoutApi() {
-  return requestClient.post('/logout', {
+export async function logoutApi(accessToken: null | string) {
+  return baseRequestClient.post('/logout', undefined, {
+    headers: accessToken
+      ? { Authorization: `Bearer ${accessToken}` }
+      : undefined,
     withCredentials: true,
   });
 }

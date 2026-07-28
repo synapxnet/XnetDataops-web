@@ -4,7 +4,12 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { DEFAULT_HOME_PATH, LOGIN_PATH } from '@vben/constants';
-import { resetAllStores, useAccessStore, useUserStore } from '@vben/stores';
+import {
+  getAccessTokenExpiresAt,
+  resetAllStores,
+  useAccessStore,
+  useUserStore,
+} from '@vben/stores';
 
 import { notification } from 'ant-design-vue';
 import { defineStore } from 'pinia';
@@ -18,18 +23,101 @@ export const useAuthStore = defineStore('auth', () => {
   const router = useRouter();
 
   const loginLoading = ref(false);
+  const MAX_TIMER_DELAY = 2_147_483_647;
+  let forceLogoutPromise: null | Promise<void> = null;
+  let sessionExpirationTimer: ReturnType<typeof setTimeout> | undefined;
+  let sessionMonitorStarted = false;
+
+  function clearSessionExpirationTimer() {
+    if (sessionExpirationTimer) {
+      clearTimeout(sessionExpirationTimer);
+      sessionExpirationTimer = undefined;
+    }
+  }
+
+  function clearSession() {
+    clearSessionExpirationTimer();
+    resetAllStores();
+    accessStore.setLoginExpired(false);
+  }
+
+  async function forceLogout(redirect: boolean = true) {
+    if (forceLogoutPromise) {
+      return forceLogoutPromise;
+    }
+
+    const currentRoute = router.currentRoute.value;
+    const loginRoute = {
+      path: LOGIN_PATH,
+      query:
+        redirect && currentRoute.path !== LOGIN_PATH
+          ? { redirect: encodeURIComponent(currentRoute.fullPath) }
+          : {},
+    };
+
+    forceLogoutPromise = (async () => {
+      clearSession();
+      if (router.currentRoute.value.path !== LOGIN_PATH) {
+        await router.replace(loginRoute);
+      }
+    })();
+
+    try {
+      await forceLogoutPromise;
+    } finally {
+      forceLogoutPromise = null;
+    }
+  }
+
+  function scheduleSessionExpiration() {
+    clearSessionExpirationTimer();
+    const token = accessStore.accessToken;
+    if (!token) {
+      return;
+    }
+
+    const expiresAt = getAccessTokenExpiresAt(token);
+    if (expiresAt === null || expiresAt <= Date.now()) {
+      void forceLogout();
+      return;
+    }
+
+    if (accessStore.accessTokenExpiresAt !== expiresAt) {
+      accessStore.setAccessToken(token);
+    }
+
+    sessionExpirationTimer = setTimeout(() => {
+      sessionExpirationTimer = undefined;
+      void forceLogout();
+    }, Math.min(expiresAt - Date.now(), MAX_TIMER_DELAY));
+  }
+
+  function validateSessionExpiration() {
+    if (accessStore.accessToken && accessStore.isAccessTokenExpired) {
+      void forceLogout();
+      return;
+    }
+    scheduleSessionExpiration();
+  }
+
+  function startSessionExpirationMonitor() {
+    if (!sessionMonitorStarted) {
+      sessionMonitorStarted = true;
+      window.addEventListener('focus', validateSessionExpiration);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          validateSessionExpiration();
+        }
+      });
+    }
+    validateSessionExpiration();
+  }
 
   /**
    * 跳转到登录页
    */
   async function redirectToLogin() {
-    resetAllStores();
-    await router.replace({
-      path: LOGIN_PATH,
-      query: {
-        redirect: encodeURIComponent(router.currentRoute.value.fullPath),
-      },
-    });
+    await forceLogout();
   }
 
   /**
@@ -72,6 +160,7 @@ export const useAuthStore = defineStore('auth', () => {
 
       if (accessToken) {
         accessStore.setAccessToken(accessToken);
+        startSessionExpirationMonitor();
 
         const result = await fetchUserAndPermissions();
 
@@ -93,7 +182,9 @@ export const useAuthStore = defineStore('auth', () => {
 
         if (userInfo?.realName) {
           notification.success({
-            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName}`,
+            description: `${$t('authentication.loginSuccessDesc')}:${
+              userInfo?.realName
+            }`,
             duration: 3,
             message: $t('authentication.loginSuccess'),
           });
@@ -125,22 +216,14 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout(redirect: boolean = true) {
-    try {
-      await logoutApi();
-    } catch {
-      // 不做任何处理
-    }
-    resetAllStores();
-    accessStore.setLoginExpired(false);
+    const token = accessStore.accessToken;
+    await forceLogout(redirect);
 
-    await router.replace({
-      path: LOGIN_PATH,
-      query: redirect
-        ? {
-            redirect: encodeURIComponent(router.currentRoute.value.fullPath),
-          }
-        : {},
-    });
+    try {
+      await logoutApi(token);
+    } catch {
+      // 本地会话已经清除，服务端退出仅做尽力处理
+    }
   }
 
   async function fetchUserInfo() {
@@ -157,6 +240,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function $reset() {
+    clearSessionExpirationTimer();
     loginLoading.value = false;
   }
 
@@ -164,8 +248,11 @@ export const useAuthStore = defineStore('auth', () => {
     $reset,
     authLogin,
     authCodeLogin,
+    clearSession,
     fetchUserInfo,
+    forceLogout,
     loginLoading,
     logout,
+    startSessionExpirationMonitor,
   };
 });
