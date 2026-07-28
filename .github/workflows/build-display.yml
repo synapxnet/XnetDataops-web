@@ -33,7 +33,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build web application
-        run: pnpm --filter @vben/web-antd build
+        run: pnpm build:antd
 
       - name: Upload web artifact
         uses: actions/upload-artifact@v4
@@ -42,4 +42,3 @@ jobs:
           path: apps/web-antd/dist
           if-no-files-found: error
           retention-days: 3
-
