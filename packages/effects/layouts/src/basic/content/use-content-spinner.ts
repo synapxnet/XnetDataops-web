@@ -44,6 +44,8 @@ function useContentSpinner() {
     return true;
   });
 
+  router.onError(onEnd);
+
   return { spinning };
 }
 

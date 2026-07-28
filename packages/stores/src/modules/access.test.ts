@@ -1,11 +1,27 @@
 import { createPinia, setActivePinia } from 'pinia';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useAccessStore } from './access';
+import {
+  getAccessTokenExpiresAt,
+  isAccessTokenExpired,
+  useAccessStore,
+} from './access';
+
+function createToken(expiresAt: number) {
+  const payload = btoa(JSON.stringify({ exp: expiresAt / 1000 }))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_')
+    .replaceAll('=', '');
+  return `header.${payload}.signature`;
+}
 
 describe('useAccessStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('updates accessMenus state', () => {
@@ -28,6 +44,40 @@ describe('useAccessStore', () => {
     const store = useAccessStore();
     store.setAccessToken('xyz789');
     expect(store.accessToken).toBe('xyz789');
+  });
+
+  it('records the JWT expiration when the token changes', () => {
+    const expiresAt = Date.UTC(2026, 6, 29);
+    const store = useAccessStore();
+
+    store.setAccessToken(createToken(expiresAt));
+
+    expect(store.accessTokenExpiresAt).toBe(expiresAt);
+    expect(getAccessTokenExpiresAt(store.accessToken)).toBe(expiresAt);
+  });
+
+  it('treats expired and malformed tokens as expired', () => {
+    const now = Date.UTC(2026, 6, 28);
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+
+    expect(isAccessTokenExpired(createToken(now - 1000))).toBe(true);
+    expect(isAccessTokenExpired(createToken(now + 1000))).toBe(false);
+    expect(isAccessTokenExpired('invalid-token')).toBe(true);
+  });
+
+  it('derives expiration for a token restored from an older cache', () => {
+    const now = Date.UTC(2026, 6, 28);
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+    const store = useAccessStore();
+
+    store.$patch({
+      accessToken: createToken(now - 1000),
+      accessTokenExpiresAt: null,
+    });
+
+    expect(store.isAccessTokenExpired).toBe(true);
   });
 
   // 测试设置空的访问菜单列表

@@ -38,6 +38,12 @@ function setupCommonGuard(router: Router) {
       stopProgress();
     }
   });
+
+  router.onError(() => {
+    if (preferences.transition.progress) {
+      stopProgress();
+    }
+  });
 }
 
 /**
@@ -49,6 +55,23 @@ function setupAccessGuard(router: Router) {
     const accessStore = useAccessStore();
     const userStore = useUserStore();
     const authStore = useAuthStore();
+    const loginRedirect = {
+      path: LOGIN_PATH,
+      query:
+        to.fullPath === preferences.app.defaultHomePath
+          ? {}
+          : { redirect: encodeURIComponent(to.fullPath) },
+      replace: true,
+    };
+
+    if (accessStore.accessToken && accessStore.isAccessTokenExpired) {
+      authStore.clearSession();
+      return to.path === LOGIN_PATH ? true : loginRedirect;
+    }
+
+    if (accessStore.accessToken) {
+      authStore.startSessionExpirationMonitor();
+    }
 
     // 基本路由，这些路由不需要进入权限拦截
     if (coreRouteNames.includes(to.name as string)) {
@@ -71,16 +94,7 @@ function setupAccessGuard(router: Router) {
 
       // 没有访问权限，跳转登录页面
       if (to.fullPath !== LOGIN_PATH) {
-        return {
-          path: LOGIN_PATH,
-          // 如不需要，直接删除 query
-          query:
-            to.fullPath === preferences.app.defaultHomePath
-              ? {}
-              : { redirect: encodeURIComponent(to.fullPath) },
-          // 携带当前跳转的页面，登录后重新跳转该页面
-          replace: true,
-        };
+        return loginRedirect;
       }
       return to;
     }
@@ -92,7 +106,15 @@ function setupAccessGuard(router: Router) {
 
     // 生成路由表
     // 当前登录用户拥有的角色标识列表
-    const userInfo = userStore.userInfo || (await authStore.fetchUserInfo());
+    let userInfo = userStore.userInfo;
+    try {
+      userInfo ||= await authStore.fetchUserInfo();
+    } catch {
+      authStore.clearSession();
+      return router.currentRoute.value.path === LOGIN_PATH
+        ? false
+        : loginRedirect;
+    }
     const userRoles = userInfo.roles ?? [];
 
     // 生成菜单和路由
