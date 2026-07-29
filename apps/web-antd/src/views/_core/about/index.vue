@@ -7,7 +7,7 @@ const capabilities = [
 ];
 
 const links = [
-  ['在线体验', 'https://www.xnetdataops.synapxnet.cn'],
+  ['在线体验', 'http://www.xnetdataops.synapxnet.cn'],
   ['前端仓库', 'https://github.com/synapxnet/XnetDataops-web'],
   ['后端仓库', 'https://github.com/synapxnet/XnetDataops'],
   ['OpenXnet', 'https://openxnet.synapxnet.com'],

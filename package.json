@@ -11,7 +11,7 @@
     "vue-vben-admin",
     "vue3"
   ],
-  "homepage": "https://www.xnetdataops.synapxnet.cn",
+  "homepage": "http://www.xnetdataops.synapxnet.cn",
   "bugs": "https://github.com/synapxnet/XnetDataops-web/issues",
   "repository": "https://github.com/synapxnet/XnetDataops-web.git",
   "license": "MIT",
