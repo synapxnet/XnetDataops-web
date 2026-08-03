@@ -36,6 +36,12 @@ XnetDataops Web is the open-source DataOps console maintained by the **SynapXnet
 
 Together with the [XnetDataops backend](https://github.com/synapxnet/XnetDataops), it forms an enterprise-grade, multi-tenant, frontend/backend-separated system. The frontend uses Vue 3, TypeScript, Vite, Ant Design Vue, and the [Vue Vben Admin framework](https://github.com/vbenjs/vue-vben-admin).
 
+## GOAI Competition 1.0.0
+
+The `GOAI-Competition` branch adds `/agent/incidents/:incidentId/data-evidence`, combining quality, schema, lineage, and workflow evidence. Missing fields, partial failures, and unavailable logs remain explicit; the UI does not infer the 120/128-dimensional conclusion from frontend constants.
+
+[Route parameters, integration, and verification](./docs/goai-handoff/HANDOFF-GOAI-COMPETITION-1.0.0.md) · [XnetDataops backend branch](https://github.com/synapxnet/XnetDataops/tree/GOAI-Competition)
+
 ## Highlights
 
 - Enterprise multi-tenancy with role and data boundaries.

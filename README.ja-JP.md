@@ -36,6 +36,12 @@ XnetDataops Web は **SynapXnet チーム**が公開する DataOps コンソー�
 
 [XnetDataops バックエンド](https://github.com/synapxnet/XnetDataops) と組み合わせることで、企業向けマルチテナント、フロントエンド・バックエンド分離システムを構成します。Vue 3、TypeScript、Vite、Ant Design Vue、および [Vue Vben Admin](https://github.com/vbenjs/vue-vben-admin) を採用しています。
 
+## GOAI Competition 1.0.0
+
+`GOAI-Competition` ブランチは `/agent/incidents/:incidentId/data-evidence` を追加し、品質、Schema、リネージュ、ワークフロー証拠をまとめて表示します。欠損、部分失敗、ログ参照不可を明示し、フロントエンド定数から 120/128 次元の結論を作りません。
+
+[ルート引数、連携、検証結果](./docs/goai-handoff/HANDOFF-GOAI-COMPETITION-1.0.0.md) · [XnetDataops バックエンド](https://github.com/synapxnet/XnetDataops/tree/GOAI-Competition)
+
 ## 特長
 
 - ロールとデータ境界を備えた企業向けマルチテナント。

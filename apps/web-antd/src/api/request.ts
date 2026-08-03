@@ -113,6 +113,26 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   return client;
 }
 
+/**
+ * 创建保留公共 ToolResponse 包络的 Agent 请求客户端。
+ *
+ * @param serviceBaseURL 领域服务原有 API 地址
+ * @returns Agent 证据请求客户端
+ */
+function createAgentRequestClient(serviceBaseURL: string) {
+  const baseURL = serviceBaseURL.replace(/\/api\/[^/]+\/?$/, '');
+  const client = new RequestClient({ baseURL, responseReturn: 'data', timeout: 60_000 });
+  client.addRequestInterceptor({
+    fulfilled: async (config) => {
+      const token = useAccessStore().accessToken;
+      config.headers.Authorization = token ? `Bearer ${token}` : null;
+      config.headers['Accept-Language'] = preferences.app.locale;
+      return config;
+    },
+  });
+  return client;
+}
+
 // USR接口请求客户端 (用户认证，默认)
 export const requestClient = createRequestClient(apiURL, {
   responseReturn: 'data',
@@ -172,5 +192,9 @@ export const dobRequestClient = createRequestClient(dobApiURL, {
 export const dauRequestClient = createRequestClient(dauApiURL, {
   responseReturn: 'data',
 });
+
+export const agentDqmRequestClient = createAgentRequestClient(dqmApiURL);
+export const agentDgvRequestClient = createAgentRequestClient(dgvApiURL);
+export const agentTskRequestClient = createAgentRequestClient(tskApiURL);
 
 export const baseRequestClient = new RequestClient({ baseURL: apiURL });

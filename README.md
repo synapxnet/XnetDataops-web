@@ -36,6 +36,12 @@ XnetDataops Web 是由 **SynapXnet 团队**开源的数据工程控制台，为�
 
 本仓库是平台前端，与 [XnetDataops](https://github.com/synapxnet/XnetDataops) 后端仓库共同组成企业级、多租户、前后端分离系统。项目基于 Vue 3、TypeScript、Vite、Ant Design Vue，并采用 [Vue Vben Admin 框架](https://github.com/vbenjs/vue-vben-admin) 构建，通过模块化路由组织十二个业务域。
 
+## GOAI Competition 1.0.0
+
+`GOAI-Competition` 分支新增数据证据深链 `/agent/incidents/:incidentId/data-evidence`，并行展示质量、Schema、血缘和工作流证据。界面保留字段缺失、部分失败和日志不可读状态，不用前端常量推断 120/128 维结论。
+
+[查看页面参数、联调方式和验证记录](./docs/goai-handoff/HANDOFF-GOAI-COMPETITION-1.0.0.md) · [XnetDataops 后端比赛分支](https://github.com/synapxnet/XnetDataops/tree/GOAI-Competition)
+
 ## 项目优势
 
 - **企业多租户**：以租户、用户、角色和权限边界支撑多团队数据协作。
