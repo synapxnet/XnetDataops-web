@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import type { NotificationItem } from '@vben/layouts';
 
-import { computed, provide, ref, watch } from 'vue';
+import type { OrganizationTreeNode } from '#/api/core';
+
+import { computed, onMounted, provide, ref, watch } from 'vue';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
 import { useWatermark } from '@vben/hooks';
@@ -16,6 +18,7 @@ import { preferences } from '@vben/preferences';
 import { useAccessStore, useUserStore } from '@vben/stores';
 import { openWindow } from '@vben/utils';
 
+import { getOrganizationTreeApi } from '#/api/core';
 import { useAuthStore } from '#/store';
 import LoginForm from '#/views/_core/authentication/login.vue';
 
@@ -107,6 +110,42 @@ function handleNoticeClear() {
 function handleMakeAll() {
   notifications.value.forEach((item) => (item.isRead = true));
 }
+
+interface SelectedOrganization {
+  deptUid: null | string;
+  level: number;
+  teamUid: null | string;
+  tenantUid: null | string;
+}
+
+const organizationTree = ref<OrganizationTreeNode[]>([]);
+const selectedOrganization = ref<SelectedOrganization>({
+  deptUid: null,
+  level: 0,
+  teamUid: null,
+  tenantUid: null,
+});
+
+/** 加载当前用户被后端明确授权的组织树。 */
+async function fetchOrganizationTree() {
+  try {
+    organizationTree.value = await getOrganizationTreeApi();
+  } catch {
+    console.error('获取组织树失败');
+    organizationTree.value = [];
+  }
+}
+
+/** 更新当前会话的组织范围，不在浏览器中持久化跨账号权限状态。 */
+function handleDepartmentChange(value: string[] = []) {
+  const [tenantUid, deptUid, teamUid] = value;
+  selectedOrganization.value = {
+    deptUid: deptUid || null,
+    level: value.length,
+    teamUid: teamUid || null,
+    tenantUid: tenantUid || null,
+  };
+}
 watch(
   () => preferences.app.watermark,
   async (enable) => {
@@ -125,10 +164,18 @@ watch(
 // 提供当前用户信息
 const userInfo = computed(() => userStore.userInfo);
 provide('currentUserInfo', userInfo);
+provide('organizationTree', organizationTree);
+provide('selectedOrganization', selectedOrganization);
+
+onMounted(fetchOrganizationTree);
 </script>
 
 <template>
-  <BasicLayout @clear-preferences-and-logout="handleLogout">
+  <BasicLayout
+    :tree-data="organizationTree"
+    @clear-preferences-and-logout="handleLogout"
+    @department-change="handleDepartmentChange"
+  >
     <template #user-dropdown>
       <UserDropdown
         :avatar

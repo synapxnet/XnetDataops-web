@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, useSlots, watch } from 'vue';
+import { computed, useSlots } from 'vue';
 
 import { useRefresh } from '@vben/hooks';
 import { RotateCw } from '@vben/icons';
@@ -45,7 +45,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   clearPreferencesAndLogout: [];
-  'department-change': (value: string[]) => void;
+  departmentChange: (value: string[]) => void;
 }>();
 
 const REFERENCE_VALUE = 50;
@@ -127,18 +127,10 @@ function clearPreferencesAndLogout() {
   emit('clearPreferencesAndLogout');
 }
 
-watch(
-  () => props.selectedOrgPath,
-  (newPath) => {
-    console.log('父组件传递的选中路径变化:', newPath);
-  },
-  { immediate: true },
-);
-
 function handleDepartmentChange(value: string[]) {
   // 不再需要本地 treeValue
   // 直接向上传递变化
-  emit('department-change', value);
+  emit('departmentChange', value);
 }
 </script>
 
