@@ -1,0 +1,11 @@
+XnetDataops-web
+OpenXnet GOAI Competition Suite goai-v1.1.0
+
+Copyright (c) 2024-present, Vben
+Copyright (c) 2026-present, SynapXnet Team
+
+Repository license: MIT. See LICENSE for the complete terms.
+
+This repository includes third-party software. Its dependency inventory is recorded in sbom.cdx.json; each dependency remains subject to its own license. The Vben copyright and MIT license notice are retained in LICENSE.
+
+OpenXnet, XnetAIOps, XnetDataOps and XnetMLOps are products of the SynapXnet team. Their separation into repositories is an engineering boundary, not a separation of product ownership.

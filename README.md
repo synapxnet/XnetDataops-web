@@ -1,3 +1,6 @@
+<!-- GOAI-RELEASE-LINKS -->
+> GOAI competition release: [`goai-v1.1.0`](./GOAI-RELEASE.md) · [Security](./SECURITY.md) · [Notice](./NOTICE) · [CycloneDX SBOM](./sbom.cdx.json)
+
 <div align="center">
 
 **简体中文** | [English](./README.en-US.md) | [日本語](./README.ja-JP.md)
