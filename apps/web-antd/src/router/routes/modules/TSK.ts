@@ -38,6 +38,15 @@ const routes: RouteRecordRaw[] = [
           title: '运行实例',
         },
       },
+      {
+        name: 'RecommendationProductList',
+        path: '/TSK/recommendation-products',
+        component: () => import('#/views/TSK/recommendation-product/index.vue'),
+        meta: {
+          icon: 'lucide:database-zap',
+          title: '推荐数据产品',
+        },
+      },
     ],
   },
 ];

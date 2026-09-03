@@ -12,7 +12,7 @@ defineOptions({ name: 'CodeLogin' });
 
 const authStore = useAuthStore();
 const CODE_LENGTH = 6;
-const DEMO_PHONE = '12345678900';
+const DEMO_PHONE = '17870171303';
 const DEMO_VERIFICATION_CODE = '000000';
 
 const formSchema = computed((): VbenFormSchema[] => {

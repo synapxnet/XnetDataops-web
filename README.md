@@ -4,9 +4,9 @@
 
 **XnetDataops 数据工程与治理平台的 Web 控制台**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-1677ff.svg)](https://www.xnetdataops.synapxnet.cn) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-1677ff.svg)](http://www.xnetdataops.synapxnet.cn) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
 
-[在线体验](https://www.xnetdataops.synapxnet.cn) · [后端仓库 XnetDataops](https://github.com/synapxnet/XnetDataops) · [OpenXnet 开源社区](https://openxnet.synapxnet.com) · [查看许可](./LICENSE)
+[在线体验](http://www.xnetdataops.synapxnet.cn) · [后端仓库 XnetDataops](https://github.com/synapxnet/XnetDataops) · [OpenXnet 开源社区](https://openxnet.synapxnet.com) · [查看许可](./LICENSE)
 
 </div>
 
@@ -93,8 +93,8 @@ pnpm build:antd
 
 ## 在线体验
 
-- 访问地址：<https://www.xnetdataops.synapxnet.cn>
-- 演示手机号：`12345678900`
+- 访问地址：<http://www.xnetdataops.synapxnet.cn>
+- 演示手机号：`17870171303`
 - 演示验证码：`000000`
 
 固定验证码仅用于公开演示。生产部署应接入安全的身份认证与验证码服务。

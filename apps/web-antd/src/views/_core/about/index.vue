@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+defineOptions({ name: 'SynapXnetAbout' });
+
 const capabilities = [
   ['全链路 DataOps', '覆盖数据接入、开发、调度、质量、治理、服务与审计。'],
   ['企业多租户', '以租户、用户、角色和权限边界支撑多团队数据协作。'],
@@ -7,13 +9,11 @@ const capabilities = [
 ];
 
 const links = [
-  ['在线体验', 'https://www.xnetdataops.synapxnet.cn'],
+  ['在线体验', 'http://www.xnetdataops.synapxnet.cn'],
   ['前端仓库', 'https://github.com/synapxnet/XnetDataops-web'],
   ['后端仓库', 'https://github.com/synapxnet/XnetDataops'],
   ['OpenXnet', 'https://openxnet.synapxnet.com'],
 ];
-
-defineOptions({ name: 'SynapXnetAbout' });
 </script>
 
 <template>
@@ -21,13 +21,14 @@ defineOptions({ name: 'SynapXnetAbout' });
     <header class="bg-card border-b px-6 py-8 lg:px-10">
       <div class="mx-auto max-w-6xl">
         <div class="mb-3 flex flex-wrap items-center gap-3">
-          <span class="text-muted-foreground text-sm font-medium"
-            >SynapXnet 开源项目</span
-          >
+          <span class="text-muted-foreground text-sm font-medium">
+            SynapXnet 开源项目
+          </span>
           <span
             class="border-border bg-background rounded border px-2 py-0.5 text-xs font-semibold"
-            >v1.0.0</span
           >
+            v1.0.0
+          </span>
         </div>
         <h1 class="text-foreground text-3xl font-semibold">XnetDataops</h1>
         <p class="text-muted-foreground mt-3 max-w-3xl text-base leading-7">
@@ -79,8 +80,9 @@ defineOptions({ name: 'SynapXnetAbout' });
             href="https://github.com/vbenjs/vue-vben-admin"
             rel="noreferrer"
             target="_blank"
-            >Vue Vben Admin</a
           >
+            Vue Vben Admin
+          </a>
           框架构建，并依法保留上游项目的版权与许可声明。
         </p>
         <p class="text-muted-foreground mt-3 text-sm">

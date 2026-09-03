@@ -3,7 +3,7 @@ import type { SetupContext } from 'vue';
 
 import type { MenuRecordRaw } from '@vben/types';
 
-import { computed, onMounted, ref, useSlots, watch } from 'vue';
+import { computed, ref, useSlots, watch } from 'vue';
 
 import { useRefresh } from '@vben/hooks';
 import { $t, i18n } from '@vben/locales';
@@ -35,6 +35,10 @@ import { LayoutTabbar } from './tabbar';
 
 defineOptions({ name: 'BasicLayout' });
 const props = defineProps({
+  contentEnabled: {
+    type: Boolean,
+    default: true,
+  },
   treeData: {
     type: Array,
     required: true,
@@ -42,10 +46,9 @@ const props = defineProps({
 });
 const emit = defineEmits<{
   clearPreferencesAndLogout: [];
-  'department-change': (value: string[]) => void;
+  organizationChange: [value: string[]];
 }>();
-// 处理部门选择变化
-// 新增：定义选中的组织路径（数组形式）
+// 定义选中的租户、部门、团队路径。
 const selectedOrgPath = ref<string[]>([]);
 // 定义选中组织的数据结构
 interface SelectedOrg {
@@ -53,6 +56,12 @@ interface SelectedOrg {
   tenantUid: null | string;
   deptUid: null | string;
   teamUid: null | string;
+}
+
+interface OrganizationOption {
+  children?: OrganizationOption[];
+  dataAccess?: boolean;
+  value?: string;
 }
 // 创建响应式引用存储选中状态
 const selectedOrg = ref<SelectedOrg>({
@@ -62,7 +71,7 @@ const selectedOrg = ref<SelectedOrg>({
   teamUid: null,
 });
 
-// 从 selectedOrg 生成路径数组
+/** 根据当前组织范围生成级联选择器路径。 */
 const updateSelectedOrgPath = () => {
   const path = [];
   if (selectedOrg.value.tenantUid) path.push(selectedOrg.value.tenantUid);
@@ -71,55 +80,82 @@ const updateSelectedOrgPath = () => {
   selectedOrgPath.value = path;
 };
 
-// 恢复选择状态的函数
-const restoreSelectedOrg = () => {
-  const savedOrg = localStorage.getItem('selectedOrganization');
-  if (savedOrg) {
-    try {
-      selectedOrg.value = JSON.parse(savedOrg);
-      console.log('恢复的组织选择:', selectedOrg.value);
-      updateSelectedOrgPath(); // 更新路径
-    } catch (error) {
-      console.error('解析保存的组织数据失败', error);
-      localStorage.removeItem('selectedOrganization');
-    }
-  }
-};
-
-// 处理部门选择变化
-function handleDepartmentChange(value: string[]) {
+/** 处理当前会话内的组织选择变化。 */
+function handleOrganizationChange(value: string[]) {
   const [tenantUid, deptUid, teamUid] = value;
 
   selectedOrg.value = {
-    level: value.length,
-    tenantUid: tenantUid || null,
     deptUid: deptUid || null,
+    level: value.length,
     teamUid: teamUid || null,
+    tenantUid: tenantUid || null,
   };
 
-  updateSelectedOrgPath(); // 更新路径
-
-  // 保存到本地存储
-  localStorage.setItem(
-    'selectedOrganization',
-    JSON.stringify(selectedOrg.value),
-  );
-
-  // 通知父组件
-  emit('department-change', value);
+  updateSelectedOrgPath();
+  emit('organizationChange', value);
 }
 
-// 初始化时恢复选择状态
-onMounted(() => {
-  restoreSelectedOrg();
-});
+/** 判断当前选择路径是否仍包含在服务端返回的可见组织树中。 */
+function isVisibleOrganizationPath(
+  nodes: OrganizationOption[],
+  path: string[],
+  depth = 0,
+): boolean {
+  if (depth >= path.length) return true;
+  const node = nodes.find((item) => item.value === path[depth]);
+  if (!node) return false;
+  return isVisibleOrganizationPath(node.children ?? [], path, depth + 1);
+}
 
-// 监听树数据变化，确保选中状态应用
+/** 清空已失效的组织选择，避免跨账号沿用旧权限范围。 */
+function resetSelectedOrganization() {
+  selectedOrg.value = {
+    deptUid: null,
+    level: 0,
+    teamUid: null,
+    tenantUid: null,
+  };
+  selectedOrgPath.value = [];
+  emit('organizationChange', []);
+}
+
+/** 返回第一条完整团队路径，并可优先选择已开启数据访问的团队。 */
+function findFirstOrganizationPath(
+  nodes: OrganizationOption[],
+  requireDataAccess: boolean,
+): string[] {
+  for (const tenant of nodes) {
+    if (!tenant.value) continue;
+    for (const department of tenant.children ?? []) {
+      if (!department.value) continue;
+      for (const team of department.children ?? []) {
+        if (team.value && (!requireDataAccess || team.dataAccess)) {
+          return [tenant.value, department.value, team.value];
+        }
+      }
+    }
+  }
+  return [];
+}
+
 watch(
   () => props.treeData,
   (newTree) => {
-    if (newTree && newTree.length > 0) {
-      updateSelectedOrgPath();
+    if (
+      selectedOrgPath.value.length > 0 &&
+      !isVisibleOrganizationPath(
+        newTree as OrganizationOption[],
+        selectedOrgPath.value,
+      )
+    ) {
+      resetSelectedOrganization();
+    }
+    if (selectedOrgPath.value.length === 0) {
+      const nodes = newTree as OrganizationOption[];
+      const preferredPath = findFirstOrganizationPath(nodes, true);
+      const fallbackPath = findFirstOrganizationPath(nodes, false);
+      const nextPath = preferredPath.length > 0 ? preferredPath : fallbackPath;
+      if (nextPath.length > 0) handleOrganizationChange(nextPath);
     }
   },
   { immediate: true },
@@ -258,7 +294,6 @@ const slots: SetupContext['slots'] = useSlots();
 const headerSlots = computed(() => {
   return Object.keys(slots).filter((key) => key.startsWith('header-'));
 });
-console.log(preferences, 'preferences');
 </script>
 
 <template>
@@ -321,7 +356,7 @@ console.log(preferences, 'preferences');
         @clear-preferences-and-logout="clearPreferencesAndLogout"
         :tree-data="props.treeData"
         :selected-org-path="selectedOrgPath"
-        @department-change="handleDepartmentChange"
+        @organization-change="handleOrganizationChange"
       >
         <template
           v-if="!showHeaderNav && preferences.breadcrumb.enable"
@@ -411,7 +446,8 @@ console.log(preferences, 'preferences');
 
     <!-- 主体内容 -->
     <template #content>
-      <LayoutContent />
+      <LayoutContent v-if="props.contentEnabled" />
+      <slot v-else name="content-placeholder"></slot>
     </template>
 
     <template v-if="preferences.transition.loading" #content-overlay>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, useSlots, watch } from 'vue';
+import { computed, useSlots } from 'vue';
 
 import { useRefresh } from '@vben/hooks';
 import { RotateCw } from '@vben/icons';
@@ -45,7 +45,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   clearPreferencesAndLogout: [];
-  'department-change': (value: string[]) => void;
+  organizationChange: [value: string[]];
 }>();
 
 const REFERENCE_VALUE = 50;
@@ -127,18 +127,17 @@ function clearPreferencesAndLogout() {
   emit('clearPreferencesAndLogout');
 }
 
-watch(
-  () => props.selectedOrgPath,
-  (newPath) => {
-    console.log('父组件传递的选中路径变化:', newPath);
-  },
-  { immediate: true },
-);
+/** 将级联选择器值规范化为字符串组织路径。 */
+function normalizeOrganizationPath(value: unknown): string[] {
+  if (!Array.isArray(value) || value.some((item) => Array.isArray(item))) {
+    return [];
+  }
+  return value.map(String);
+}
 
-function handleDepartmentChange(value: string[]) {
-  // 不再需要本地 treeValue
-  // 直接向上传递变化
-  emit('department-change', value);
+/** 向上层传递规范化后的租户、部门和团队路径。 */
+function handleOrganizationChange(value: unknown) {
+  emit('organizationChange', normalizeOrganizationPath(value));
 }
 </script>
 
@@ -173,13 +172,14 @@ function handleDepartmentChange(value: string[]) {
   <span
     class="mr-2 whitespace-nowrap font-medium text-gray-700 dark:text-gray-200"
   >
-    请选择：部门/租户/团队
+    请选择：租户/部门/团队
   </span>
   <div class="flex h-full min-w-0 flex-shrink-0 items-center">
     <Cascader
       :value="props.selectedOrgPath"
       :options="props.treeData"
-      @change="handleDepartmentChange"
+      placeholder="请选择租户/部门/团队"
+      @change="handleOrganizationChange"
       change-on-select
       expand-trigger="hover"
     />
