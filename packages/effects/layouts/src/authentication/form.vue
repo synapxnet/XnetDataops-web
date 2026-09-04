@@ -5,29 +5,88 @@ defineOptions({
 </script>
 
 <template>
-  <div
-    class="flex-col-center dark:bg-background-deep bg-background relative px-6 py-10 lg:flex-initial lg:px-8"
-  >
+  <div class="auth-form-view">
     <slot></slot>
-    <!-- Router View with Transition and KeepAlive -->
-    <RouterView v-slot="{ Component, route }">
-      <Transition appear mode="out-in" name="slide-right">
-        <KeepAlive :include="['Login']">
-          <component
-            :is="Component"
-            :key="route.fullPath"
-            class="enter-x mt-6 w-full sm:mx-auto md:max-w-md"
-          />
-        </KeepAlive>
-      </Transition>
-    </RouterView>
+    <div class="auth-form-inner">
+      <RouterView v-slot="{ Component, route }">
+        <Transition appear mode="out-in" name="slide-right">
+          <KeepAlive :include="['Login']">
+            <component
+              :is="Component"
+              :key="route.fullPath"
+              class="auth-form-content"
+            />
+          </KeepAlive>
+        </Transition>
+      </RouterView>
+    </div>
 
-    <!-- Footer Copyright -->
-
-    <div
-      class="text-muted-foreground absolute bottom-3 flex text-center text-xs"
-    >
+    <div class="auth-copyright text-muted-foreground">
       <slot name="copyright"> </slot>
     </div>
   </div>
 </template>
+
+<style scoped>
+.auth-form-view {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100dvh - 56px);
+  padding: 88px clamp(32px, 4vw, 64px) 64px;
+  background: var(--auth-panel-bg);
+  border: 1px solid var(--auth-panel-border);
+  border-radius: 8px;
+  box-shadow:
+    0 24px 64px var(--auth-panel-shadow),
+    inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+
+.auth-form-inner {
+  width: min(100%, 430px);
+  animation: form-enter 420ms 80ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.auth-form-content {
+  width: 100%;
+}
+
+.auth-copyright {
+  position: absolute;
+  right: 24px;
+  bottom: 20px;
+  left: 24px;
+  display: flex;
+  justify-content: center;
+  font-size: 12px;
+  text-align: center;
+}
+
+@keyframes form-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-form-view {
+    align-items: flex-start;
+    min-height: calc(100dvh - 24px);
+    padding: 112px 20px 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-form-inner {
+    animation: none;
+  }
+}
+</style>

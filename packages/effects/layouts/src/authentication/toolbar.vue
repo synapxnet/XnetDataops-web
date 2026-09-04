@@ -31,12 +31,7 @@ const showTheme = computed(() => props.toolbarList.includes('theme'));
 </script>
 
 <template>
-  <div
-    :class="{
-      'bg-accent rounded-3xl px-3 py-1': toolbarList.length > 1,
-    }"
-    class="flex-center absolute right-2 top-4 z-10"
-  >
+  <div class="auth-toolbar">
     <!-- Only show on medium and larger screens -->
     <div class="hidden md:flex">
       <AuthenticationColorToggle v-if="showColor" />
@@ -47,3 +42,28 @@ const showTheme = computed(() => props.toolbarList.includes('theme'));
     <ThemeToggle v-if="showTheme && preferences.widget.themeToggle" />
   </div>
 </template>
+
+<style scoped>
+.auth-toolbar {
+  position: absolute;
+  top: 44px;
+  right: clamp(40px, 4vw, 68px);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 2px 6px;
+  color: hsl(var(--foreground));
+  background: var(--auth-panel-bg);
+  border: 1px solid var(--auth-panel-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 22px var(--auth-panel-shadow);
+}
+
+@media (max-width: 480px) {
+  .auth-toolbar {
+    top: 26px;
+    right: 26px;
+  }
+}
+</style>
