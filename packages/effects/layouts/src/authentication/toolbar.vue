@@ -50,13 +50,13 @@ const showTheme = computed(() => props.toolbarList.includes('theme'));
   right: clamp(40px, 4vw, 68px);
   z-index: 30;
   display: flex;
-  min-height: 36px;
   align-items: center;
+  min-height: 36px;
   padding: 2px 6px;
-  border: 1px solid var(--auth-panel-border);
-  border-radius: 6px;
   color: hsl(var(--foreground));
   background: var(--auth-panel-bg);
+  border: 1px solid var(--auth-panel-border);
+  border-radius: 6px;
   box-shadow: 0 8px 22px var(--auth-panel-shadow);
 }
 

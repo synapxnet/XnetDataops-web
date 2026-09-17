@@ -49,3 +49,6 @@ vite.config.ts.*
 *.sln
 *.sw?
 .history
+
+# Local acceptance screenshots and recordings
+.qa*/

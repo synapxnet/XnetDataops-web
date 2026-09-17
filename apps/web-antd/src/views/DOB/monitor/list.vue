@@ -1,7 +1,30 @@
 <script lang="ts" setup>
+const pageRequestState = pageState();
+import { pageState } from '#/components/data-page/request-state';
+import DataPage from '#/components/data-page/index.vue';
 import { ref, onMounted, reactive } from 'vue';
-import { Card, Table, Button, Tag, Space, Modal, Form, FormItem, Input, Select, SelectOption, Switch, Textarea, message } from 'ant-design-vue';
-import { getMonitors, createMonitor, updateMonitor, deleteMonitor, toggleMonitor } from '../api/monitor';
+import {
+  Table,
+  Button,
+  Tag,
+  Space,
+  Modal,
+  Form,
+  FormItem,
+  Input,
+  Select,
+  SelectOption,
+  Switch,
+  Textarea,
+  message,
+} from 'ant-design-vue';
+import {
+  getMonitors,
+  createMonitor,
+  updateMonitor,
+  deleteMonitor,
+  toggleMonitor,
+} from '../api/monitor';
 import type { DataMonitor } from '../api/types';
 
 const loading = ref(false);
@@ -10,23 +33,46 @@ const dataList = ref<DataMonitor[]>([]);
 const columns = [
   { title: '监控名称', dataIndex: 'name', key: 'name' },
   { title: '表名', dataIndex: 'tableName', key: 'tableName' },
-  { title: '监控类型', dataIndex: 'monitorType', key: 'monitorType', width: 120 },
+  {
+    title: '监控类型',
+    dataIndex: 'monitorType',
+    key: 'monitorType',
+    width: 120,
+  },
   { title: '告警级别', dataIndex: 'alertLevel', key: 'alertLevel', width: 100 },
   { title: '启用', dataIndex: 'enabled', key: 'enabled', width: 80 },
   { title: 'Cron', dataIndex: 'scheduleCron', key: 'scheduleCron', width: 140 },
   { title: '操作', key: 'action', width: 220, fixed: 'right' as const },
 ];
 
-const monitorTypeColorMap: Record<string, string> = { freshness: 'blue', volume: 'green', schema: 'purple', custom: 'cyan' };
-const alertLevelColorMap: Record<string, string> = { info: 'blue', warning: 'orange', critical: 'red' };
+const monitorTypeColorMap: Record<string, string> = {
+  freshness: 'blue',
+  volume: 'green',
+  schema: 'purple',
+  custom: 'cyan',
+};
+const alertLevelColorMap: Record<string, string> = {
+  info: 'blue',
+  warning: 'orange',
+  critical: 'red',
+};
 
 const modalVisible = ref(false);
 const editingId = ref<null | number>(null);
 const formState = reactive({
-  name: '', datasourceId: undefined as number | undefined, tableName: '', monitorType: 'freshness',
-  checkExpression: '', thresholdValue: '', alertLevel: 'warning', enabled: true, scheduleCron: '', description: '',
+  name: '',
+  datasourceId: undefined as number | undefined,
+  tableName: '',
+  monitorType: 'freshness',
+  checkExpression: '',
+  thresholdValue: '',
+  alertLevel: 'warning',
+  enabled: true,
+  scheduleCron: '',
+  description: '',
 });
 
+/** 载入当前条件下的列表并维护加载状态。 Load the list for the current filters and maintain loading state. */
 async function fetchList() {
   loading.value = true;
   try {
@@ -39,20 +85,48 @@ async function fetchList() {
   }
 }
 
+/** 初始化新增草稿并打开表单。 Initialize a creation draft and open its form. */
 function showCreate() {
   editingId.value = null;
-  Object.assign(formState, { name: '', datasourceId: undefined, tableName: '', monitorType: 'freshness', checkExpression: '', thresholdValue: '', alertLevel: 'warning', enabled: true, scheduleCron: '', description: '' });
+  Object.assign(formState, {
+    name: '',
+    datasourceId: undefined,
+    tableName: '',
+    monitorType: 'freshness',
+    checkExpression: '',
+    thresholdValue: '',
+    alertLevel: 'warning',
+    enabled: true,
+    scheduleCron: '',
+    description: '',
+  });
   modalVisible.value = true;
 }
 
+/** 把选中记录复制到编辑草稿。 Copy the selected record into an edit draft. */
 function showEdit(record: DataMonitor) {
   editingId.value = record.id;
-  Object.assign(formState, { name: record.name, datasourceId: record.datasourceId, tableName: record.tableName, monitorType: record.monitorType, checkExpression: record.checkExpression, thresholdValue: record.thresholdValue, alertLevel: record.alertLevel, enabled: record.enabled, scheduleCron: record.scheduleCron, description: record.description });
+  Object.assign(formState, {
+    name: record.name,
+    datasourceId: record.datasourceId,
+    tableName: record.tableName,
+    monitorType: record.monitorType,
+    checkExpression: record.checkExpression,
+    thresholdValue: record.thresholdValue,
+    alertLevel: record.alertLevel,
+    enabled: record.enabled,
+    scheduleCron: record.scheduleCron,
+    description: record.description,
+  });
   modalVisible.value = true;
 }
 
+/** 校验并提交当前表单，失败保留输入。 Validate and submit the current form while retaining input on failure. */
 async function handleSubmit() {
-  if (!formState.name || !formState.tableName) { message.error('名称和表名不能为空'); return; }
+  if (!formState.name || !formState.tableName) {
+    message.error('名称和表名不能为空');
+    return;
+  }
   try {
     if (editingId.value) {
       await updateMonitor(editingId.value, { ...formState });
@@ -68,6 +142,7 @@ async function handleSubmit() {
   }
 }
 
+/** 切换选中资源状态并刷新列表。 Toggle the selected resource state and refresh the list. */
 async function handleToggle(record: DataMonitor) {
   try {
     await toggleMonitor(record.id);
@@ -78,48 +153,115 @@ async function handleToggle(record: DataMonitor) {
   }
 }
 
+/** 确认后删除选中记录。 Delete the selected record after confirmation. */
 function handleDelete(record: DataMonitor) {
   Modal.confirm({
-    title: '确认删除', content: `确定要删除监控「${record.name}」吗？`, okType: 'danger',
+    title: '确认删除',
+    content: `确定要删除监控「${record.name}」吗？`,
+    okType: 'danger',
     async onOk() {
-      try { await deleteMonitor(record.id); message.success('删除成功'); fetchList(); }
-      catch (e: any) { message.error('删除失败: ' + e.message); }
+      try {
+        await deleteMonitor(record.id);
+        message.success('删除成功');
+        fetchList();
+      } catch (e: any) {
+        message.error('删除失败: ' + e.message);
+        throw e;
+      }
     },
   });
 }
 
-onMounted(() => { fetchList(); });
+onMounted(() => {
+  fetchList();
+});
 </script>
 
 <template>
-  <div class="p-4">
-    <Card title="数据监控">
-      <template #extra><Button type="primary" @click="showCreate">新建监控</Button></template>
-      <Table :columns="columns" :data-source="dataList" :loading="loading" row-key="id" :scroll="{ x: 1100 }">
-        <template #bodyCell="{ column, record: _record }">
-          <template v-if="column.key === 'monitorType'">
-            <Tag :color="monitorTypeColorMap[(_record as any).monitorType] || 'default'">{{ (_record as any).monitorType }}</Tag>
-          </template>
-          <template v-if="column.key === 'alertLevel'">
-            <Tag :color="alertLevelColorMap[(_record as any).alertLevel] || 'default'">{{ (_record as any).alertLevel }}</Tag>
-          </template>
-          <template v-if="column.key === 'enabled'">
-            <Tag :color="(_record as any).enabled ? 'green' : 'default'">{{ (_record as any).enabled ? '是' : '否' }}</Tag>
-          </template>
-          <template v-if="column.key === 'action'">
-            <Space>
-              <Button type="link" size="small" @click="showEdit(_record as DataMonitor)">编辑</Button>
-              <Button type="link" size="small" @click="handleToggle(_record as DataMonitor)">{{ (_record as any).enabled ? '禁用' : '启用' }}</Button>
-              <Button type="link" size="small" danger @click="handleDelete(_record as DataMonitor)">删除</Button>
-            </Space>
-          </template>
+  <DataPage
+    description="持续关注数据健康、监控事件与服务目标。"
+    title="数据监控"
+  >
+    <template #extra
+      ><Button type="primary" @click="showCreate">新建监控</Button></template
+    >
+    <Table
+      :columns="columns"
+      :data-source="dataList"
+      :loading="loading"
+      row-key="id"
+      :scroll="{ x: 1100 }"
+    >
+      <template #bodyCell="{ column, record: _record }">
+        <template v-if="column.key === 'monitorType'">
+          <Tag
+            :color="
+              monitorTypeColorMap[(_record as any).monitorType] || 'default'
+            "
+            >{{ (_record as any).monitorType }}</Tag
+          >
         </template>
-      </Table>
-    </Card>
-    <Modal v-model:open="modalVisible" :title="editingId ? '编辑监控' : '新建监控'" @ok="handleSubmit" :destroy-on-close="true" width="600px">
-      <Form layout="vertical">
-        <FormItem label="监控名称" required><Input v-model:value="formState.name" /></FormItem>
-        <FormItem label="表名" required><Input v-model:value="formState.tableName" /></FormItem>
+        <template v-if="column.key === 'alertLevel'">
+          <Tag
+            :color="
+              alertLevelColorMap[(_record as any).alertLevel] || 'default'
+            "
+            >{{ (_record as any).alertLevel }}</Tag
+          >
+        </template>
+        <template v-if="column.key === 'enabled'">
+          <Tag :color="(_record as any).enabled ? 'green' : 'default'">{{
+            (_record as any).enabled ? '是' : '否'
+          }}</Tag>
+        </template>
+        <template v-if="column.key === 'action'">
+          <Space>
+            <Button
+              type="link"
+              size="small"
+              @click="showEdit(_record as DataMonitor)"
+              >编辑</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              @click="handleToggle(_record as DataMonitor)"
+              >{{ (_record as any).enabled ? '禁用' : '启用' }}</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              danger
+              @click="handleDelete(_record as DataMonitor)"
+              >删除</Button
+            >
+          </Space>
+        </template>
+      </template>
+    </Table>
+
+    <Modal
+      :mask-closable="false"
+      :confirm-loading="pageRequestState.writePending > 0"
+      v-model:open="modalVisible"
+      :title="editingId ? '编辑监控' : '新建监控'"
+      @ok="handleSubmit"
+      :destroy-on-close="true"
+      width="600px"
+    >
+      <Form
+        :disabled="
+          pageRequestState.writePending > 0 ||
+          Object.keys(pageRequestState.failures).length > 0
+        "
+        layout="vertical"
+      >
+        <FormItem label="监控名称" required
+          ><Input v-model:value="formState.name"
+        /></FormItem>
+        <FormItem label="表名" required
+          ><Input v-model:value="formState.tableName"
+        /></FormItem>
         <FormItem label="监控类型">
           <Select v-model:value="formState.monitorType">
             <SelectOption value="freshness">新鲜度</SelectOption>
@@ -128,8 +270,12 @@ onMounted(() => { fetchList(); });
             <SelectOption value="custom">自定义</SelectOption>
           </Select>
         </FormItem>
-        <FormItem label="检查表达式"><Textarea v-model:value="formState.checkExpression" :rows="2" /></FormItem>
-        <FormItem label="阈值"><Input v-model:value="formState.thresholdValue" /></FormItem>
+        <FormItem label="检查表达式"
+          ><Textarea v-model:value="formState.checkExpression" :rows="2"
+        /></FormItem>
+        <FormItem label="阈值"
+          ><Input v-model:value="formState.thresholdValue"
+        /></FormItem>
         <FormItem label="告警级别">
           <Select v-model:value="formState.alertLevel">
             <SelectOption value="info">信息</SelectOption>
@@ -137,10 +283,18 @@ onMounted(() => { fetchList(); });
             <SelectOption value="critical">严重</SelectOption>
           </Select>
         </FormItem>
-        <FormItem label="启用"><Switch v-model:checked="formState.enabled" /></FormItem>
-        <FormItem label="Cron"><Input v-model:value="formState.scheduleCron" placeholder="调度Cron表达式" /></FormItem>
-        <FormItem label="描述"><Textarea v-model:value="formState.description" :rows="2" /></FormItem>
+        <FormItem label="启用"
+          ><Switch v-model:checked="formState.enabled"
+        /></FormItem>
+        <FormItem label="Cron"
+          ><Input
+            v-model:value="formState.scheduleCron"
+            placeholder="调度Cron表达式"
+        /></FormItem>
+        <FormItem label="描述"
+          ><Textarea v-model:value="formState.description" :rows="2"
+        /></FormItem>
       </Form>
     </Modal>
-  </div>
+  </DataPage>
 </template>

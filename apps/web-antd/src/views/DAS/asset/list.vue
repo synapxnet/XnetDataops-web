@@ -1,6 +1,16 @@
 <script lang="ts" setup>
+import DataPage from '#/components/data-page/index.vue';
 import { ref, onMounted } from 'vue';
-import { Card, Table, Button, Tag, Space, Select, SelectOption, Modal, message } from 'ant-design-vue';
+import {
+  Table,
+  Button,
+  Tag,
+  Space,
+  Select,
+  SelectOption,
+  Modal,
+  message,
+} from 'ant-design-vue';
 import { useRouter } from 'vue-router';
 import { getAssets, deleteAsset } from '../api/dataAsset';
 import type { DataAsset } from '../api/types';
@@ -17,8 +27,18 @@ const columns = [
   { title: '业务域', dataIndex: 'domain', key: 'domain', width: 100 },
   { title: '分类', dataIndex: 'category', key: 'category', width: 80 },
   { title: '所有者', dataIndex: 'owner', key: 'owner', width: 100 },
-  { title: '访问级别', dataIndex: 'accessLevel', key: 'accessLevel', width: 100 },
-  { title: '质量评分', dataIndex: 'qualityScore', key: 'qualityScore', width: 100 },
+  {
+    title: '访问级别',
+    dataIndex: 'accessLevel',
+    key: 'accessLevel',
+    width: 100,
+  },
+  {
+    title: '质量评分',
+    dataIndex: 'qualityScore',
+    key: 'qualityScore',
+    width: 100,
+  },
   { title: '状态', dataIndex: 'status', key: 'status', width: 80 },
   { title: '创建时间', dataIndex: 'createdAt', key: 'createdAt', width: 180 },
   { title: '操作', key: 'action', width: 200, fixed: 'right' as const },
@@ -58,6 +78,7 @@ const statusColorMap: Record<string, string> = {
   deprecated: 'red',
 };
 
+/** 载入当前条件下的列表并维护加载状态。 Load the list for the current filters and maintain loading state. */
 async function fetchList() {
   loading.value = true;
   try {
@@ -70,10 +91,12 @@ async function fetchList() {
   }
 }
 
+/** 应用当前筛选条件。 Apply the current filters. */
 function handleFilter() {
   fetchList();
 }
 
+/** 确认后删除选中记录。 Delete the selected record after confirmation. */
 function handleDelete(record: DataAsset) {
   Modal.confirm({
     title: '确认删除',
@@ -86,59 +109,117 @@ function handleDelete(record: DataAsset) {
         fetchList();
       } catch (e: any) {
         message.error('删除失败: ' + e.message);
+
+        throw e;
       }
     },
   });
 }
 
-onMounted(() => { fetchList(); });
+onMounted(() => {
+  fetchList();
+});
 </script>
 
 <template>
-  <div class="p-4">
-    <Card title="数据资产列表">
-      <template #extra>
-        <Space>
-          <Select v-model:value="filterDomain" placeholder="业务域" allow-clear style="width: 120px;" @change="handleFilter">
-            <SelectOption value="用户">用户</SelectOption>
-            <SelectOption value="订单">订单</SelectOption>
-            <SelectOption value="财务">财务</SelectOption>
-            <SelectOption value="运营">运营</SelectOption>
-          </Select>
-          <Select v-model:value="filterCategory" placeholder="分类" allow-clear style="width: 120px;" @change="handleFilter">
-            <SelectOption value="核心">核心</SelectOption>
-            <SelectOption value="重要">重要</SelectOption>
-            <SelectOption value="一般">一般</SelectOption>
-          </Select>
-          <Button type="primary" @click="router.push('/DAS/asset/create')">新建资产</Button>
-        </Space>
-      </template>
-      <Table :columns="columns" :data-source="dataList" :loading="loading" row-key="id" :scroll="{ x: 1400 }">
-        <template #bodyCell="{ column, record: _record }">
-          <template v-if="column.key === 'assetType'">
-            <Tag :color="assetTypeColorMap[(_record as any).assetType] || 'default'">{{ (_record as any).assetType }}</Tag>
-          </template>
-          <template v-if="column.key === 'domain'">
-            <Tag :color="domainColorMap[(_record as any).domain] || 'default'">{{ (_record as any).domain }}</Tag>
-          </template>
-          <template v-if="column.key === 'category'">
-            <Tag :color="categoryColorMap[(_record as any).category] || 'default'">{{ (_record as any).category }}</Tag>
-          </template>
-          <template v-if="column.key === 'accessLevel'">
-            <Tag :color="accessLevelColorMap[(_record as any).accessLevel] || 'default'">{{ (_record as any).accessLevel }}</Tag>
-          </template>
-          <template v-if="column.key === 'status'">
-            <Tag :color="statusColorMap[(_record as any).status] || 'default'">{{ (_record as any).status }}</Tag>
-          </template>
-          <template v-if="column.key === 'action'">
-            <Space>
-              <Button type="link" size="small" @click="router.push(`/DAS/asset/detail/${(_record as any).id}`)">详情</Button>
-              <Button type="link" size="small" @click="router.push(`/DAS/asset/create?id=${(_record as any).id}`)">编辑</Button>
-              <Button type="link" size="small" danger @click="handleDelete(_record as DataAsset)">删除</Button>
-            </Space>
-          </template>
+  <DataPage
+    description="发现可用资产，整理分类与使用信息。"
+    title="数据资产列表"
+  >
+    <template #extra>
+      <Space>
+        <Select
+          v-model:value="filterDomain"
+          placeholder="业务域"
+          allow-clear
+          style="width: 120px"
+          @change="handleFilter"
+        >
+          <SelectOption value="用户">用户</SelectOption>
+          <SelectOption value="订单">订单</SelectOption>
+          <SelectOption value="财务">财务</SelectOption>
+          <SelectOption value="运营">运营</SelectOption>
+        </Select>
+        <Select
+          v-model:value="filterCategory"
+          placeholder="分类"
+          allow-clear
+          style="width: 120px"
+          @change="handleFilter"
+        >
+          <SelectOption value="核心">核心</SelectOption>
+          <SelectOption value="重要">重要</SelectOption>
+          <SelectOption value="一般">一般</SelectOption>
+        </Select>
+        <Button type="primary" @click="router.push('/DAS/asset/create')"
+          >新建资产</Button
+        >
+      </Space>
+    </template>
+    <Table
+      :columns="columns"
+      :data-source="dataList"
+      :loading="loading"
+      row-key="id"
+      :scroll="{ x: 1400 }"
+    >
+      <template #bodyCell="{ column, record: _record }">
+        <template v-if="column.key === 'assetType'">
+          <Tag
+            :color="assetTypeColorMap[(_record as any).assetType] || 'default'"
+            >{{ (_record as any).assetType }}</Tag
+          >
         </template>
-      </Table>
-    </Card>
-  </div>
+        <template v-if="column.key === 'domain'">
+          <Tag :color="domainColorMap[(_record as any).domain] || 'default'">{{
+            (_record as any).domain
+          }}</Tag>
+        </template>
+        <template v-if="column.key === 'category'">
+          <Tag
+            :color="categoryColorMap[(_record as any).category] || 'default'"
+            >{{ (_record as any).category }}</Tag
+          >
+        </template>
+        <template v-if="column.key === 'accessLevel'">
+          <Tag
+            :color="
+              accessLevelColorMap[(_record as any).accessLevel] || 'default'
+            "
+            >{{ (_record as any).accessLevel }}</Tag
+          >
+        </template>
+        <template v-if="column.key === 'status'">
+          <Tag :color="statusColorMap[(_record as any).status] || 'default'">{{
+            (_record as any).status
+          }}</Tag>
+        </template>
+        <template v-if="column.key === 'action'">
+          <Space>
+            <Button
+              type="link"
+              size="small"
+              @click="router.push(`/DAS/asset/detail/${(_record as any).id}`)"
+              >详情</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              @click="
+                router.push(`/DAS/asset/create?id=${(_record as any).id}`)
+              "
+              >编辑</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              danger
+              @click="handleDelete(_record as DataAsset)"
+              >删除</Button
+            >
+          </Space>
+        </template>
+      </template>
+    </Table>
+  </DataPage>
 </template>

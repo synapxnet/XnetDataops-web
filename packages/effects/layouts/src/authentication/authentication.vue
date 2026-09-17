@@ -1,3 +1,14 @@
+<!--
+#!/usr/bin/env vue
+# -*- coding: utf-8 -*-
+# Copyright (C) 2026 Synapxnet. All rights reserved.
+# This file is Synapxnet Proprietary and Confidential. It is strictly
+# forbidden to copy, distribute, or use without explicit authorization.
+# 复赛认证视觉与决赛入口 / Semifinal authentication visuals and finals navigation
+# Author: maoyo | Department: 研发部 | Date: 2026-09-17
+# Version: 1.3.0 | Security Level: INTERNAL
+# Maintainer: maoyo | Email: synapxnet@gmail.com
+-->
 <script setup lang="ts">
 import type { ToolbarType } from './types';
 
@@ -42,10 +53,16 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const { isDark } = usePreferences();
+/** 使用原平台主色构建浅深主题变量。 / Build light and dark theme variables from the original platform colors. */
 const shellStyle = computed(() => ({
   '--auth-accent': props.accentColor,
   '--auth-brand-surface': props.brandSurface,
 }));
+const platforms = [
+  { name: 'AIOps', match: 'aiops', url: 'https://goai.xnetaiops.synapxnet.online/' },
+  { name: 'DataOps', match: 'dataops', url: 'https://goai.xnetdataops.synapxnet.online/' },
+  { name: 'MLOps', match: 'mlops', url: 'https://goai.xnetmlops.synapxnet.online/' },
+];
 </script>
 
 <template>
@@ -89,6 +106,11 @@ const shellStyle = computed(() => ({
     </aside>
 
     <AuthenticationFormView class="auth-form-panel">
+      <nav class="auth-platforms" aria-label="Xnet platforms">
+        <a v-for="platform in platforms" :key="platform.match" :href="platform.url"
+          :aria-current="appName.toLowerCase().includes(platform.match) ? 'page' : undefined"
+        >{{ platform.name }}</a>
+      </nav>
       <template v-if="copyright" #copyright>
         <slot name="copyright">
           <Copyright
@@ -103,43 +125,33 @@ const shellStyle = computed(() => ({
 
 <style scoped>
 .auth-shell {
-  --auth-panel-bg: color-mix(
-    in srgb,
-    hsl(var(--background)) 96%,
-    var(--auth-accent)
-  );
-  --auth-panel-border: color-mix(
-    in srgb,
-    var(--auth-accent) 18%,
-    hsl(var(--border))
-  );
+  /* 区分文字与按钮强调色，保证两种主题可读。 / Separate text and button accents for readable contrast in both themes. */
+  --auth-accent-text: color-mix(in srgb, var(--auth-accent) 76%, black);
+  --auth-button-bg: color-mix(in srgb, var(--auth-accent) 86%, #08131c);
+  --auth-canvas: #f7f9fc;
+  --auth-panel-bg: #f9fbfe;
+  --auth-panel-border: #d6e2ed;
+  --auth-field-bg: #f0f5fa;
+  --auth-field-border: #b3c6d8;
   --auth-panel-shadow: color-mix(
     in srgb,
     var(--auth-brand-surface) 14%,
     transparent
   );
-  --auth-story-heading: color-mix(
-    in srgb,
-    var(--auth-brand-surface) 82%,
-    hsl(var(--foreground))
-  );
-  --auth-story-muted: color-mix(
-    in srgb,
-    hsl(var(--muted-foreground)) 88%,
-    var(--auth-accent)
-  );
+  --auth-story-heading: #17314a;
+  --auth-story-muted: #536678;
   position: relative;
   isolation: isolate;
   display: grid;
   min-height: 100dvh;
   grid-template-columns: minmax(0, 1.16fr) minmax(440px, 0.84fr);
   overflow: hidden;
-  color: hsl(var(--foreground));
+  color: var(--auth-story-heading);
   background: linear-gradient(
     112deg,
-    color-mix(in srgb, var(--auth-accent) 10%, hsl(var(--background))) 0%,
-    color-mix(in srgb, var(--auth-accent) 4%, hsl(var(--background))) 52%,
-    hsl(var(--background)) 100%
+    color-mix(in srgb, var(--auth-accent) 10%, var(--auth-canvas)) 0%,
+    color-mix(in srgb, var(--auth-accent) 4%, var(--auth-canvas)) 52%,
+    var(--auth-canvas) 100%
   );
 }
 
@@ -157,24 +169,20 @@ const shellStyle = computed(() => ({
 }
 
 .auth-shell--dark {
-  --auth-panel-bg: color-mix(
-    in srgb,
-    var(--auth-brand-surface) 84%,
-    hsl(var(--background))
-  );
-  --auth-panel-border: color-mix(
-    in srgb,
-    var(--auth-accent) 28%,
-    rgb(255 255 255 / 14%)
-  );
+  --auth-accent-text: color-mix(in srgb, var(--auth-accent) 50%, white);
+  --auth-canvas: #081724;
+  --auth-panel-bg: #102333;
+  --auth-panel-border: #2a4153;
+  --auth-field-bg: #142b3c;
+  --auth-field-border: #3b5264;
   --auth-panel-shadow: rgb(0 0 0 / 28%);
   --auth-story-heading: #edf5f6;
-  --auth-story-muted: rgb(230 240 243 / 72%);
+  --auth-story-muted: #a9bdcc;
   background: linear-gradient(
     112deg,
     color-mix(in srgb, var(--auth-brand-surface) 88%, var(--auth-accent)) 0%,
     var(--auth-brand-surface) 54%,
-    color-mix(in srgb, var(--auth-brand-surface) 74%, hsl(var(--background)))
+    color-mix(in srgb, var(--auth-brand-surface) 74%, var(--auth-canvas))
       100%
   );
 }
@@ -227,7 +235,7 @@ const shellStyle = computed(() => ({
 
 .auth-story-copy p {
   margin: 0 0 12px;
-  color: color-mix(in srgb, var(--auth-accent) 82%, white);
+  color: var(--auth-accent-text);
   font-size: 13px;
   font-weight: 650;
 }
@@ -297,6 +305,118 @@ const shellStyle = computed(() => ({
   margin: 28px 28px 28px 8px;
 }
 
+.auth-platforms {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 28px;
+  border-bottom: 1px solid var(--auth-panel-border);
+}
+.auth-platforms a {
+  flex: 1;
+  min-height: 40px;
+  padding: 9px 12px;
+  border-bottom: 2px solid transparent;
+  color: var(--auth-story-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+.auth-platforms a:hover,
+.auth-platforms a[aria-current="page"] { color: var(--auth-accent-text); }
+.auth-platforms a[aria-current="page"] { border-bottom-color: var(--auth-accent-text); }
+.auth-platforms a:focus-visible { outline: 2px solid var(--auth-accent-text); outline-offset: 3px; }
+/* 三平台共享表单层级和输入表面。 / Share form hierarchy and field surfaces across all three platforms. */
+.auth-shell :deep(.auth-mode-label) {
+  margin: 0 0 10px;
+  color: var(--auth-accent-text);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 20px;
+}
+.auth-shell :deep(.auth-title) { margin-bottom: 28px; }
+.auth-shell :deep(.auth-title h2) {
+  margin: 0 0 12px;
+  color: var(--auth-story-heading);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 36px;
+}
+.auth-shell :deep(.auth-title p),
+.auth-shell :deep(.auth-title .text-muted-foreground) {
+  color: var(--auth-story-muted);
+  font-size: 14px;
+  line-height: 24px;
+}
+.auth-shell :deep(.auth-code-login input),
+.auth-shell :deep(.dataops-login .ant-input) {
+  min-height: 44px;
+  border-color: var(--auth-field-border);
+  color: var(--auth-story-heading);
+  background: var(--auth-field-bg);
+  font-size: 14px;
+}
+.auth-shell :deep(.auth-code-login input::placeholder),
+.auth-shell :deep(.dataops-login .ant-input::placeholder) {
+  color: var(--auth-story-muted);
+  opacity: 1;
+}
+.auth-shell :deep(.auth-code-login input:focus),
+.auth-shell :deep(.dataops-login .ant-input:focus) {
+  border-color: var(--auth-accent-text);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--auth-accent) 16%, transparent);
+}
+.auth-shell :deep(.auth-code-login label),
+.auth-shell :deep(.dataops-login .ant-form-item-label > label) {
+  color: var(--auth-story-heading);
+  font-size: 13px;
+  font-weight: 600;
+}
+/* 对齐公共登录控件尺寸，同时保留短信组合输入。 / Match shared login control sizing while retaining the SMS input group. */
+.auth-shell :deep(.dataops-login) { max-width: none; }
+.auth-shell :deep(.dataops-login form .ant-input),
+.auth-shell :deep(.dataops-login form .ant-btn) {
+  height: 44px;
+  min-height: 44px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.auth-shell :deep(.dataops-login form .ant-btn) { font-weight: 600; }
+.auth-shell :deep(.dataops-login .login-links .ant-btn-link) {
+  color: var(--auth-accent-text);
+}
+.auth-shell :deep(.dataops-login form .ant-btn:not(.ant-btn-primary)) {
+  border-color: var(--auth-field-border);
+  color: var(--auth-story-heading);
+  background: var(--auth-field-bg);
+}
+.auth-shell :deep(.dataops-login form .ant-btn:not(.ant-btn-primary):hover:not(:disabled)) {
+  border-color: var(--auth-accent-text);
+  color: var(--auth-accent-text);
+}
+.auth-shell :deep(.dataops-login form .ant-input-compact-first-item) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.auth-shell :deep(.dataops-login form .ant-btn-compact-last-item) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+/* 同时覆盖本平台独立的短信表单。 / Include this platform's dedicated SMS form. */
+.auth-shell :deep(.auth-code-login .auth-submit-button),
+.auth-shell :deep(.dataops-login .ant-btn-primary) {
+  border-color: var(--auth-button-bg) !important;
+  color: #fff !important;
+  background: var(--auth-button-bg) !important;
+}
+.auth-shell :deep(.auth-code-login .auth-submit-button:hover),
+.auth-shell :deep(.dataops-login .ant-btn-primary:hover) {
+  border-color: color-mix(in srgb, var(--auth-button-bg) 88%, #08131c) !important;
+  background: color-mix(in srgb, var(--auth-button-bg) 88%, #08131c) !important;
+}
+.auth-shell :deep(.auth-code-login .auth-back-button) { display: none; }
+
 @keyframes auth-enter {
   from {
     opacity: 0;
@@ -355,6 +475,7 @@ const shellStyle = computed(() => ({
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .auth-platforms a { transition: none; }
   .auth-story-copy,
   .auth-product-preview {
     animation: none;

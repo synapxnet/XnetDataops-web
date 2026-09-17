@@ -19,7 +19,7 @@ spec:
         - name: harbor
       containers:
         - name: xnet-mlops-web
-          image: 127.0.0.1/library/xnet-mlops-web:${BUILD_NUMBER}
+          image: 192.168.10.132/library/xnet-mlops-web:${BUILD_NUMBER}
           ports:
             - name: tcp-80
               containerPort: 80

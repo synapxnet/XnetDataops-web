@@ -4,7 +4,7 @@ pipeline {
       inheritFrom 'nodejs bare'
       containerTemplate {
         name 'nodejs'
-        image '127.0.0.1/library/jdk17-nodes:v1.1.1'
+        image '192.168.10.132/library/jdk17-nodes:v1.1.1'
       }
 
     }
@@ -73,14 +73,14 @@ pipeline {
             script {
               sh 'podman --version || { echo "Podman is not installed"; exit 1; }'
               sh '''
-echo "$DOCKER_PASS" | podman login http://127.0.0.1 -u "$DOCKER_USER" --password-stdin || { echo "Login failed"; exit 1; }
+echo "$DOCKER_PASS" | podman login http://192.168.10.132 -u "$DOCKER_USER" --password-stdin || { echo "Login failed"; exit 1; }
 '''
               sh """
-              podman build  -f Dockerfile -t 127.0.0.1/library/xnet-mlops-web:${env.BUILD_NUMBER} . || { echo "Build failed"; exit 1; }
+              podman build  -f Dockerfile -t 192.168.10.132/library/xnet-mlops-web:${env.BUILD_NUMBER} . || { echo "Build failed"; exit 1; }
 
               """
               sh """
-              podman push 127.0.0.1/library/xnet-mlops-web:${env.BUILD_NUMBER} || { echo "Push failed"; exit 1; }
+              podman push 192.168.10.132/library/xnet-mlops-web:${env.BUILD_NUMBER} || { echo "Push failed"; exit 1; }
               """
             }
 
@@ -102,7 +102,7 @@ echo "$DOCKER_PASS" | podman login http://127.0.0.1 -u "$DOCKER_USER" --password
               chmod 600 ~/.kube/config
               kubectl version --client
               kubectl get nodes -n xnet-mlops || { echo "Failed to connect to Kubernetes cluster"; exit 1; }
-              sed -i "s|image: 127.0.0.1/library/xnet-mlops-web:.*|image: 127.0.0.1/library/xnet-mlops-web:${BUILD_NUMBER}|" deploy/deploy.yaml
+              sed -i "s|image: 192.168.10.132/library/xnet-mlops-web:.*|image: 192.168.10.132/library/xnet-mlops-web:${BUILD_NUMBER}|" deploy/deploy.yaml
               kubectl apply -f deploy/deploy.yaml -n xnet-mlops || { echo "Failed to apply deploy.yaml"; exit 1; }
               kubectl rollout restart deployment xnet-mlops-web-deployment -n xnet-mlops || { echo "Failed to restart deployment"; exit 1; }
             '''

@@ -44,7 +44,7 @@ smpRequestClient.get('/hadoop/versions')
 // /smp/hadoop/versions
 
 // 代理转换
-// /smp/hadoop/versions → /hadoop/versions → http://127.0.0.1:8185/api/hadoop/versions
+// /smp/hadoop/versions → /hadoop/versions → http://192.168.1.156:8185/api/hadoop/versions
 ```
 
 #### 2. 带 /smp 前缀格式
@@ -59,7 +59,7 @@ smpRequestClient.get('/smp/workstations')
 // /smp/smp/workstations
 
 // 代理转换
-// /smp/smp/workstations → /api/smp/workstations → http://127.0.0.1:8185/api/smp/workstations
+// /smp/smp/workstations → /api/smp/workstations → http://192.168.1.156:8185/api/smp/workstations
 ```
 
 ### 代理规则优先级
@@ -71,12 +71,12 @@ proxy: {
   // 1. 先匹配 /smp/smp（更具体）
   '/smp/smp': {
     rewrite: (path) => path.replace(/^\/smp\/smp/, '/api/smp'),
-    target: 'http://127.0.0.1:8185',
+    target: 'http://192.168.1.156:8185',
   },
   // 2. 再匹配 /smp（通用）
   '/smp': {
     rewrite: (path) => path.replace(/^\/smp/, ''),
-    target: 'http://127.0.0.1:8185/api',
+    target: 'http://192.168.1.156:8185/api',
   },
 }
 ```

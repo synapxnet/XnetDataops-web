@@ -129,36 +129,36 @@ defineExpose({
 
 .auth-mode-label {
   margin: 0 0 10px;
-  color: var(--auth-accent);
   font-size: 13px;
   font-weight: 650;
+  color: var(--auth-accent);
 }
 
 .auth-submit-button,
 .auth-back-button {
   min-height: 44px;
-  border-radius: 6px;
   font-weight: 600;
+  border-radius: 6px;
   transition:
     transform 160ms ease,
     box-shadow 160ms ease;
 }
 
 .auth-submit-button {
-  border-color: var(--auth-accent) !important;
   color: #f7fbfc !important;
   background: var(--auth-accent) !important;
+  border-color: var(--auth-accent) !important;
   box-shadow: 0 8px 20px color-mix(in srgb, var(--auth-accent) 22%, transparent);
 }
 
 .auth-submit-button:hover {
-  border-color: color-mix(in srgb, var(--auth-accent) 88%, #0a1520) !important;
   background: color-mix(in srgb, var(--auth-accent) 88%, #0a1520) !important;
+  border-color: color-mix(in srgb, var(--auth-accent) 88%, #0a1520) !important;
 }
 
 .auth-back-button {
-  border-color: var(--auth-panel-border) !important;
   background: transparent !important;
+  border-color: var(--auth-panel-border) !important;
 }
 
 .auth-back-button:hover {
@@ -168,12 +168,12 @@ defineExpose({
 
 .auth-code-login :deep(input) {
   min-height: 44px;
-  border-color: var(--auth-panel-border);
   background: color-mix(
     in srgb,
     var(--auth-panel-bg) 88%,
     hsl(var(--background))
   );
+  border-color: var(--auth-panel-border);
 }
 
 .auth-code-login :deep(input:focus) {
@@ -182,9 +182,9 @@ defineExpose({
 }
 
 .auth-code-login :deep(label) {
-  color: hsl(var(--foreground));
   font-size: 13px;
   font-weight: 600;
+  color: hsl(var(--foreground));
 }
 
 .auth-submit-button:active,

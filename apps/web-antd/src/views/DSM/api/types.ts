@@ -7,7 +7,7 @@ export interface DataSource {
   port: number;
   databaseName: string;
   username: string;
-  encryptedPassword: string;
+  encryptedPassword?: string;
   connectionParams: string;
   status: string;
   lastTestAt: string;

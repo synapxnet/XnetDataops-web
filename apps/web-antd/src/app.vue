@@ -9,6 +9,10 @@ import { App, ConfigProvider, theme } from 'ant-design-vue';
 import { antdLocale } from '#/locales';
 
 import './theme-parity.css';
+import './dataops-design.css';
+import SkinSettings from './appearance/SkinSettings.vue';
+import { initializeSkin } from './appearance/skin';
+initializeSkin();
 
 defineOptions({ name: 'App' });
 
@@ -34,8 +38,9 @@ const tokenTheme = computed(() => {
 
 <template>
   <ConfigProvider :locale="antdLocale" :theme="tokenTheme">
-    <App>
+    <App class="dataops-app">
       <RouterView />
+      <SkinSettings />
     </App>
   </ConfigProvider>
 </template>

@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+import DataPage from '#/components/data-page/index.vue';
+defineOptions({ name: 'SynapXnetAbout' });
+
 const capabilities = [
   ['全链路 DataOps', '覆盖数据接入、开发、调度、质量、治理、服务与审计。'],
   ['企业多租户', '以租户、用户、角色和权限边界支撑多团队数据协作。'],
@@ -12,32 +15,14 @@ const links = [
   ['后端仓库', 'https://github.com/synapxnet/XnetDataops'],
   ['OpenXnet', 'https://openxnet.synapxnet.com'],
 ];
-
-defineOptions({ name: 'SynapXnetAbout' });
 </script>
 
 <template>
-  <div class="bg-background min-h-full">
-    <header class="bg-card border-b px-6 py-8 lg:px-10">
-      <div class="mx-auto max-w-6xl">
-        <div class="mb-3 flex flex-wrap items-center gap-3">
-          <span class="text-muted-foreground text-sm font-medium"
-            >SynapXnet 开源项目</span
-          >
-          <span
-            class="border-border bg-background rounded border px-2 py-0.5 text-xs font-semibold"
-            >v1.0.0</span
-          >
-        </div>
-        <h1 class="text-foreground text-3xl font-semibold">XnetDataops</h1>
-        <p class="text-muted-foreground mt-3 max-w-3xl text-base leading-7">
-          覆盖数据集成、开发、治理与服务化的企业级多租户 DataOps
-          平台，采用前后端分离和模块化微服务架构。
-        </p>
-      </div>
-    </header>
-
-    <main class="mx-auto max-w-6xl px-6 py-8 lg:px-10">
+  <DataPage
+    title="关于 XnetDataOps"
+    description="连接企业数据与物理观测，为整个 SynapXnet 提供可信数据。"
+  >
+    <main class="mx-auto max-w-6xl px-2 py-3">
       <section>
         <h2 class="text-foreground text-lg font-semibold">平台优势</h2>
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -79,8 +64,9 @@ defineOptions({ name: 'SynapXnetAbout' });
             href="https://github.com/vbenjs/vue-vben-admin"
             rel="noreferrer"
             target="_blank"
-            >Vue Vben Admin</a
           >
+            Vue Vben Admin
+          </a>
           框架构建，并依法保留上游项目的版权与许可声明。
         </p>
         <p class="text-muted-foreground mt-3 text-sm">
@@ -88,5 +74,5 @@ defineOptions({ name: 'SynapXnetAbout' });
         </p>
       </section>
     </main>
-  </div>
+  </DataPage>
 </template>
