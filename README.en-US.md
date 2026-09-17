@@ -1,101 +1,74 @@
-## GOAI finals release · v1.3.0
+<!--
+Copyright (C) 2026 Synapxnet. All rights reserved.
+DataOps 版本、接入与复现说明 / DataOps version, access and reproduction guide.
+Author: maoyo | Department: 研发部 | Date: 2026-09-18 | Version: 1.3.0
+Maintainer: maoyo
+-->
 
-**[Release and source downloads](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [GOAI branch](https://github.com/synapxnet/XnetDataops-web/tree/GOAI-Competition) · [Matching backend](https://github.com/synapxnet/XnetDataops/releases/tag/v1.3.0) · [OpenXnet installer](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
+# XnetDataOps Web
 
-This default `display` branch retains historical showcase code. The GOAI release badge links to the separate finals release; it does not claim that this branch or deployed services were upgraded. Download the pinned version from the release page.
+[![GOAI release](https://img.shields.io/badge/GOAI%20release-1.3.0-1677ff.svg)](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0)
 
-Version 1.3.0 adds the governance workbench, lineage and quality evidence, DAG validation, resident Agent chat/tasks/configuration, and consistent login/theme controls. Its production build and 47 targeted tests passed; full type checking and every online page were not accepted as complete.
+[简体中文](README.md) · [English](README.en-US.md) · [日本語](README.ja-JP.md)
 
-See the pinned [source delivery guide](https://github.com/synapxnet/XnetDataops-web/blob/d5c66e45f76732badfe3dd1c1c5ebb12b6be844d/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md) for build instructions, dependencies and verification limits. This documentation update does not move the release tag or redeploy services.
+Web console for DataOps governance, DAG editing, evidence and resident Agent interaction.
 
----
+**[Pinned v1.3.0 source](https://github.com/synapxnet/XnetDataops-web/tree/v1.3.0) · [Release/downloads](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [Matching backend](https://github.com/synapxnet/XnetDataops/tree/v1.3.0) · [OpenXnet installer](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
 
-<div align="center">
+This default `display` branch retains historical showcase code. The GOAI release badge links to a separate release: clone the pinned tag below to reproduce it. README-only changes do not move that tag, replace source archives or redeploy services.
 
-[简体中文](./README.md) | **English** | [日本語](./README.ja-JP.md)
+## Current demo and sign-in
 
-# XnetDataops Web
+- Staging: [https://goai.xnetdataops.synapxnet.online/](https://goai.xnetdataops.synapxnet.online/); [login](https://goai.xnetdataops.synapxnet.online/#/auth/login).
+- Public demo phone: **`17870171303`**. Six-digit demo verification code: **`000000`**. These are for the authorized demo environment only, not password-based login.
+- Verified on 2026-09-18: sign-in and read-only identity/status succeeded; user `goai_operator`, role `DEVELOPER`; resident platform `dataops`, Agent `1.3.0`, `ONLINE`, model/tools configured. This check did not execute business changes or a complete cross-platform run.
 
-**Web console for data engineering, governance, services, and audit**
+The [current authentication implementation](https://github.com/synapxnet/XnetDataops/blob/v1.3.0/dataops-usr-service/src/main/java/com/synapxnet/dataopsusrservice/service/impl/AuthServiceImpl.java) accepts pre-provisioned demo identities. The send-code endpoint returns a demo marker; **it does not deliver real SMS**. Use the demo code above directly. Self-registration is not implemented and QR login is unavailable. Production deployments must replace demo authentication and provision their own users and organization permissions.
 
-[![GOAI release](https://img.shields.io/badge/GOAI%20release-1.3.0-1677ff.svg)](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
+This code authenticates the DataOps website only. It is **not an AgentTeams access code or Live execution authorization**; those belong to separate OpenXnet workspace controls. No model API keys or internal credentials are published here.
 
-[Live Demo](https://www.xnetdataops.synapxnet.cn) · [Backend: XnetDataops](https://github.com/synapxnet/XnetDataops) · [OpenXnet](https://openxnet.synapxnet.com) · [License](./LICENSE)
+## API and resident Agent
 
-</div>
+| Purpose | Same-origin browser path | Meaning |
+|---|---|---|
+| User/auth | `/api`, including `/api/login` and `/api/user/info` | Gateway maps to USR `/api/usr`; do not append `/usr` again |
+| Business services | `/dsm`, `/dim`, `/ddv`, `/tsk`, `/dqm`, `/dgv`, `/das`, `/dap`, `/dms`, `/dob`, `/dau` | Organization/team/resource authorization required |
+| Governance workbench | `/dgv/governance/workbench` | Current deployment is a separate read-only route |
+| Resident Agent | `/api/resident/v1/`; status: `/api/resident/v1/status` | Platform sign-in and server-side capability checks |
 
-> The images below are historical showcase screenshots, not the current v1.3.0 UI or acceptance evidence.
+Runtime configuration was verified as `VITE_GLOB_API_URL=/api`. Anonymous resident/organization/workbench requests are rejected. An unauthenticated `/api/user/info` request can return HTTP 200 with a business error: inspect `code`, not HTTP status alone.
 
-![XnetDataops overview](./docs/images/xnetdataops-overview.png)
+The [resident service](https://github.com/synapxnet/OpenXnet/tree/v1.3.0/services/platform-resident-agent) runs separately from Java services and AgentTeams. It provides local chat, allowed tools and task views. Its current handoff status is `handoffAvailable=false / PENDING_INTEGRATION`; automatic resident-to-cross-platform handoff must not be advertised as available. Cross-platform demos use the existing OpenXnet/AgentTeams integration. Internal `/health` is not independently exposed by the reviewed public gateway; use the authenticated status endpoint.
 
-## Product Tour (historical screenshots)
+## Version scope and evidence
 
-| Demo login | Data source configuration |
-| --- | --- |
-| ![Demo login](./docs/images/xnetdataops-login.png) | ![Data sources](./docs/images/xnetdataops-datasource.png) |
-| Data integration | SQL workbench |
-| ![Integration](./docs/images/xnetdataops-integration.png) | ![SQL workbench](./docs/images/xnetdataops-workbench.png) |
-| Workflow scheduling | Data quality |
-| ![Workflows](./docs/images/xnetdataops-workflows.png) | ![Quality](./docs/images/xnetdataops-quality.png) |
-| Data lineage | Data APIs |
-| ![Lineage](./docs/images/xnetdataops-lineage.png) | ![APIs](./docs/images/xnetdataops-api.png) |
-| Masking | Observability |
-| ![Masking](./docs/images/xnetdataops-masking.png) | ![Observability](./docs/images/xnetdataops-observability.png) |
-| Audit | About |
-| ![Audit](./docs/images/xnetdataops-audit.png) | ![About](./docs/images/xnetdataops-about.png) |
+The console includes governance, lineage/quality evidence, DAG validation, resident chat/tasks/configuration and unified login/themes/skin import/export. Internal dependency and Vite production builds passed; 47/47 targeted tests passed. Full type checking and every online business flow were not accepted as complete. Browserslist age and large-chunk warnings remain.
 
-## Overview
+See the [pinned source delivery guide](https://github.com/synapxnet/XnetDataops-web/blob/v1.3.0/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md). Source release, documentation changes and read-only checks do not prove all deployed components match one source commit.
 
-XnetDataops Web is the open-source DataOps console maintained by the **SynapXnet team**. It provides a consistent workspace for source onboarding, integration, SQL development, scheduling, quality, governance, assets, APIs, masking, observability, and audit.
-
-Together with the [XnetDataops backend](https://github.com/synapxnet/XnetDataops), it forms an enterprise-grade, multi-tenant, frontend/backend-separated system. The frontend uses Vue 3, TypeScript, Vite, Ant Design Vue, and the [Vue Vben Admin framework](https://github.com/vbenjs/vue-vben-admin).
-
-## Highlights
-
-- Enterprise multi-tenancy with role and data boundaries.
-- Twelve business domains covering the complete DataOps lifecycle.
-- Independent delivery and modular routes for enterprise integration.
-- Dense operational views for repeatable engineering workflows.
-- Continuous updates from the SynapXnet team.
-
-## Modules
-
-| Module | Capability |
-| --- | --- |
-| DSM | Data source connections and status |
-| DIM | Full/incremental synchronization and logs |
-| DDV | SQL workbench, scripts, and history |
-| TSK | DAG workflows and task instances |
-| DQM | Quality rules, reports, and alerts |
-| DGV | Catalog, columns, lineage, and tags |
-| DAS | Data assets, classification, and statistics |
-| DAP | API configuration, keys, and call logs |
-| DMS | Masking rules, policies, and execution logs |
-| DOB | Data monitoring, events, and SLA |
-| DAU | Audit, data changes, and compliance |
-| USR | Users, roles, and access control |
-
-## Development
+## Build the pinned version
 
 ```bash
+git clone --branch v1.3.0 --single-branch https://github.com/synapxnet/XnetDataops-web.git
+cd XnetDataops-web
 corepack enable
-pnpm install
-pnpm dev:antd
+corepack prepare pnpm@9.15.7 --activate
+pnpm install --frozen-lockfile
 pnpm build:antd
 ```
 
-Use Node.js 20+ and pnpm 9.15.7. Never commit production credentials or access tokens.
+Requires **Node.js 20.10+ and pnpm 9.15.7**. Stack: Vue 3, TypeScript, Vite/Turbo, Ant Design Vue, Pinia and Vue Router on Vben Admin. Output: `apps/web-antd/dist`. Internal workspaces must prepare their stubs/dependencies first; when lifecycle scripts are disabled, follow the source delivery guide instead of directly invoking Vite in an unprepared checkout.
 
-## Demo
+Before `pnpm dev:antd`, update `apps/web-antd/vite.config.mts`: the pinned file contains historical private-network proxy targets and lacks a complete resident proxy. Configure your authorized backend and resident prefix. These development addresses are not the public demo endpoint.
 
-- URL: <https://www.xnetdataops.synapxnet.cn>
-- Phone: `12345678900`
-- Verification code: `000000`
+Production uses the same-origin prefixes in `apps/web-antd/.env.production`; route upstreams at the gateway. Never place model keys in browser configuration. Historical `deploy/` examples include other-platform templates and are not a verified one-command DataOps deployment. Preserve precise read-only governance routing and organization authorization.
 
-The fixed code is only for the public showcase. Production must use secure authentication.
+## Historical image
 
-## License and Upstream
+This image shows an earlier showcase layout, not the current v1.3.0 UI or acceptance evidence.
 
-Released under the [MIT License](./LICENSE). The frontend uses [Vue Vben Admin](https://github.com/vbenjs/vue-vben-admin); its upstream MIT copyright and license notices are retained.
+![Historical DataOps overview](docs/images/xnetdataops-overview.png)
 
-XnetDataops is part of [OpenXnet](https://openxnet.synapxnet.com). Copyright © 2026 SynapXnet.
+## License and contributions
+
+See [LICENSE](LICENSE) and component-specific notices. The frontend is based on [Vue Vben Admin](https://github.com/vbenjs/vue-vben-admin), retaining upstream attribution and licensing. Include a version, reproduction steps and redacted evidence in Issues/PRs; never include private credentials.
