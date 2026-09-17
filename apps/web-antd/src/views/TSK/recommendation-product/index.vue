@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+const pageRequestState = pageState();
+import { pageState } from '#/components/data-page/request-state';
+import DataPage from '#/components/data-page/index.vue';
 import { computed, onMounted, reactive, ref } from 'vue';
 
 import {
@@ -12,7 +15,6 @@ import {
   Input,
   Modal,
   Progress,
-  Space,
   Statistic,
   Table,
   Tag,
@@ -24,7 +26,6 @@ import {
   CheckCircleOutlined,
   CloudUploadOutlined,
   DatabaseOutlined,
-  ReloadOutlined,
 } from '@ant-design/icons-vue';
 
 import {
@@ -42,8 +43,8 @@ const operation = ref<'build' | 'publish'>('build');
 const selectedProduct = ref<RecommendationProduct>();
 const formState = reactive({
   approvalId: '',
-  lineageReference: 'dataops://recommendation/raw/associated-sample-v1',
-  productVersion: 'recommendation-dcn-demo-v1',
+  lineageReference: '',
+  productVersion: '',
 });
 
 const columns = [
@@ -58,11 +59,14 @@ const columns = [
 
 const latestProduct = computed(() => products.value[0]);
 const publishedCount = computed(
-  () => products.value.filter((product) => product.status === 'published').length,
+  () =>
+    products.value.filter((product) => product.status === 'published').length,
 );
 const positiveRatio = computed(() => {
   const product = latestProduct.value;
-  return product?.rowCount ? Math.round((product.positiveCount / product.rowCount) * 100) : 0;
+  return product?.rowCount
+    ? Math.round((product.positiveCount / product.rowCount) * 100)
+    : undefined;
 });
 
 /** 从后端加载真实数据产品列表。 */
@@ -97,12 +101,14 @@ function openPublishDialog(product: RecommendationProduct) {
 
 /** 生成一次性幂等键，防止按钮重复点击造成重复执行。 */
 function createIdempotencyKey(action: string) {
-  const entropy = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+  const entropy =
+    globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
   return `${action.toUpperCase()}-${entropy}`;
 }
 
 /** 校验审批表单并调用构建或发布接口。 */
 async function submitOperation() {
+  if (submitting.value) return;
   if (!formState.approvalId.trim()) {
     message.error('请输入审批号');
     return;
@@ -114,7 +120,7 @@ async function submitOperation() {
   submitting.value = true;
   try {
     if (operation.value === 'build') {
-      await buildRecommendationProduct(
+      const product = await buildRecommendationProduct(
         {
           lineageReference: formState.lineageReference.trim(),
           productVersion: formState.productVersion.trim(),
@@ -122,13 +128,17 @@ async function submitOperation() {
         formState.approvalId.trim(),
         createIdempotencyKey('build'),
       );
-      message.success('聚合完成，数据产品已通过质量验证');
+      message.success(
+        '构建请求已完成，当前状态：' + statusLabel(product.status),
+      );
     } else if (selectedProduct.value) {
-      await publishRecommendationProduct(
+      const product = await publishRecommendationProduct(
         selectedProduct.value.productVersion,
         formState.approvalId.trim(),
         createIdempotencyKey('publish'),
       );
+      if (product.status !== 'published')
+        throw new Error('服务端尚未确认发布完成');
       message.success('数据产品已发布，可由 XnetMLOps 导入');
     }
     operationVisible.value = false;
@@ -142,7 +152,7 @@ async function submitOperation() {
 
 /** 将记录数量格式化为适合表格扫描的本地数字。 */
 function formatCount(value?: number) {
-  return Number(value || 0).toLocaleString('zh-CN');
+  return value === undefined ? '—' : Number(value).toLocaleString('zh-CN');
 }
 
 /** 将长摘要缩短显示，并保留完整内容供复制。 */
@@ -174,153 +184,198 @@ onMounted(loadProducts);
 </script>
 
 <template>
-  <div class="product-page">
-    <header class="page-header">
-      <div>
-        <h1>推荐数据产品</h1>
-        <p>PostgreSQL 原始层经 DataOps 聚合、质量验证与审批后发布给 XnetMLOps。</p>
-      </div>
-      <Space>
-        <Button :loading="loading" @click="loadProducts">
-          <template #icon><ReloadOutlined /></template>
-          刷新
-        </Button>
-        <Button type="primary" @click="openBuildDialog">
-          <template #icon><DatabaseOutlined /></template>
-          构建数据产品
-        </Button>
-      </Space>
-    </header>
-
-    <Alert
-      class="boundary-alert"
-      message="数据边界"
-      description="页面不接触姓名、IP、设备标识与正文。训练记录使用一致性脱敏标识，并保留用户、内容、行为与标签关联。"
-      show-icon
-      type="info"
-    />
-
-    <section class="metric-band" aria-label="数据产品摘要">
-      <Statistic title="最新版本" :value="latestProduct?.productVersion || '-'" />
-      <Statistic title="训练记录" :value="formatCount(latestProduct?.rowCount)" />
-      <Statistic title="正样本占比" :suffix="latestProduct ? '%' : ''" :value="positiveRatio" />
-      <Statistic title="已发布版本" :value="publishedCount" />
-    </section>
-
-    <section class="table-section">
-      <div class="section-heading">
-        <div>
-          <h2>版本与发布状态</h2>
-          <p>摘要由服务端根据真实聚合结果计算，发布后不可覆盖。</p>
-        </div>
+  <DataPage
+    title="推荐数据产品"
+    description="从聚合、质量验证到审批发布，让可信数据流向 XnetMLOps。"
+    ><div class="product-page">
+      <div class="product-toolbar">
+        <Button type="primary" @click="openBuildDialog"
+          ><template #icon><DatabaseOutlined /></template>构建数据产品</Button
+        >
       </div>
 
-      <Table
-        :columns="columns"
-        :data-source="products"
-        :loading="loading"
-        :pagination="{ pageSize: 10, showSizeChanger: false }"
-        :row-key="(record: RecommendationProduct) => record.productVersion"
-        :scroll="{ x: 1280 }"
-        size="middle"
-      >
-        <template #emptyText>
-          <Empty description="尚未构建推荐数据产品" />
-        </template>
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'version'">
-            <div class="version-cell">
-              <strong>{{ record.productVersion }}</strong>
-              <span>{{ record.productName }}</span>
-            </div>
-          </template>
-          <template v-else-if="column.key === 'status'">
-            <Tag :color="statusColor(record.status)">{{ statusLabel(record.status) }}</Tag>
-          </template>
-          <template v-else-if="column.key === 'rowCount'">
-            <TypographyText strong>{{ formatCount(record.rowCount) }}</TypographyText>
-          </template>
-          <template v-else-if="column.key === 'labels'">
-            <div class="label-distribution">
-              <div>
-                <span>正 {{ formatCount(record.positiveCount) }}</span>
-                <span>负 {{ formatCount(record.negativeCount) }}</span>
-              </div>
-              <Progress
-                :percent="Math.round((record.positiveCount / record.rowCount) * 100)"
-                :show-info="false"
-                :stroke-width="5"
-              />
-            </div>
-          </template>
-          <template v-else-if="column.key === 'lineage'">
-            <Tooltip :title="record.lineageReference">
-              <TypographyText class="lineage-text" copyable>{{ record.lineageReference }}</TypographyText>
-            </Tooltip>
-          </template>
-          <template v-else-if="column.key === 'digest'">
-            <div class="digest-cell">
-              <TypographyText :copyable="{ text: record.schemaDigestSha256 }">
-                Schema {{ shortDigest(record.schemaDigestSha256) }}
-              </TypographyText>
-              <TypographyText :copyable="{ text: record.artifactDigestSha256 }">
-                制品 {{ shortDigest(record.artifactDigestSha256) }}
-              </TypographyText>
-            </div>
-          </template>
-          <template v-else-if="column.key === 'actions'">
-            <Button
-              v-if="record.status === 'validated'"
-              size="small"
-              type="link"
-              @click="openPublishDialog(record as RecommendationProduct)"
-            >
-              <template #icon><CloudUploadOutlined /></template>
-              发布
-            </Button>
-            <Tooltip v-else-if="record.status === 'published'" title="该版本已发布给 XnetMLOps">
-              <CheckCircleOutlined class="published-icon" />
-            </Tooltip>
-          </template>
-        </template>
-      </Table>
-    </section>
-
-    <Modal
-      v-model:open="operationVisible"
-      :confirm-loading="submitting"
-      :title="operation === 'build' ? '构建推荐数据产品' : '发布到 XnetMLOps'"
-      ok-text="确认执行"
-      width="560px"
-      @ok="submitOperation"
-    >
       <Alert
-        :message="operation === 'build' ? '写入级别 D2' : '发布级别 D3'"
-        class="operation-alert"
+        class="boundary-alert"
+        message="数据边界"
+        description="页面不接触姓名、IP、设备标识与正文。训练记录使用一致性脱敏标识，并保留用户、内容、行为与标签关联。"
         show-icon
-        type="warning"
+        type="info"
       />
-      <Form layout="vertical">
-        <FormItem label="数据产品版本" required>
-          <Input v-model:value="formState.productVersion" :disabled="operation === 'publish'" />
-        </FormItem>
-        <FormItem v-if="operation === 'build'" label="血缘引用" required>
-          <Input v-model:value="formState.lineageReference" />
-        </FormItem>
-        <FormItem label="审批号" required>
-          <Input v-model:value="formState.approvalId" placeholder="例如 APR-20260827-001" />
-        </FormItem>
-      </Form>
-      <Descriptions v-if="operation === 'publish' && selectedProduct" bordered size="small" :column="1">
-        <DescriptionsItem label="记录数">{{ formatCount(selectedProduct.rowCount) }}</DescriptionsItem>
-        <DescriptionsItem label="当前状态">{{ statusLabel(selectedProduct.status) }}</DescriptionsItem>
-        <DescriptionsItem label="血缘">{{ selectedProduct.lineageReference }}</DescriptionsItem>
-      </Descriptions>
-    </Modal>
-  </div>
+
+      <section class="metric-band" aria-label="数据产品摘要">
+        <Statistic
+          title="最新版本"
+          :value="latestProduct?.productVersion || '-'"
+        />
+        <Statistic
+          title="训练记录"
+          :value="formatCount(latestProduct?.rowCount)"
+        />
+        <Statistic
+          title="正样本占比"
+          :suffix="latestProduct ? '%' : ''"
+          :value="positiveRatio ?? '—'"
+        />
+        <Statistic title="已发布版本" :value="publishedCount" />
+      </section>
+
+      <section class="table-section">
+        <div class="section-heading">
+          <div>
+            <h2>版本与发布状态</h2>
+            <p>摘要由服务端根据真实聚合结果计算，发布后不可覆盖。</p>
+          </div>
+        </div>
+
+        <Table
+          :columns="columns"
+          :data-source="products"
+          :loading="loading"
+          :pagination="{ pageSize: 10, showSizeChanger: false }"
+          :row-key="(record: RecommendationProduct) => record.productVersion"
+          :scroll="{ x: 1280 }"
+          size="middle"
+        >
+          <template #emptyText>
+            <Empty description="尚未构建推荐数据产品" />
+          </template>
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'version'">
+              <div class="version-cell">
+                <strong>{{ record.productVersion }}</strong>
+                <span>{{ record.productName }}</span>
+              </div>
+            </template>
+            <template v-else-if="column.key === 'status'">
+              <Tag :color="statusColor(record.status)">{{
+                statusLabel(record.status)
+              }}</Tag>
+            </template>
+            <template v-else-if="column.key === 'rowCount'">
+              <TypographyText strong>{{
+                formatCount(record.rowCount)
+              }}</TypographyText>
+            </template>
+            <template v-else-if="column.key === 'labels'">
+              <div class="label-distribution">
+                <div>
+                  <span>正 {{ formatCount(record.positiveCount) }}</span>
+                  <span>负 {{ formatCount(record.negativeCount) }}</span>
+                </div>
+                <Progress
+                  :percent="
+                    Math.round((record.positiveCount / record.rowCount) * 100)
+                  "
+                  :show-info="false"
+                  :stroke-width="5"
+                />
+              </div>
+            </template>
+            <template v-else-if="column.key === 'lineage'">
+              <Tooltip :title="record.lineageReference">
+                <TypographyText class="lineage-text" copyable>{{
+                  record.lineageReference
+                }}</TypographyText>
+              </Tooltip>
+            </template>
+            <template v-else-if="column.key === 'digest'">
+              <div class="digest-cell">
+                <TypographyText :copyable="{ text: record.schemaDigestSha256 }">
+                  Schema {{ shortDigest(record.schemaDigestSha256) }}
+                </TypographyText>
+                <TypographyText
+                  :copyable="{ text: record.artifactDigestSha256 }"
+                >
+                  制品 {{ shortDigest(record.artifactDigestSha256) }}
+                </TypographyText>
+              </div>
+            </template>
+            <template v-else-if="column.key === 'actions'">
+              <Button
+                v-if="record.status === 'validated'"
+                size="small"
+                type="link"
+                @click="openPublishDialog(record as RecommendationProduct)"
+              >
+                <template #icon><CloudUploadOutlined /></template>
+                发布
+              </Button>
+              <Tooltip
+                v-else-if="record.status === 'published'"
+                title="该版本已发布给 XnetMLOps"
+              >
+                <CheckCircleOutlined class="published-icon" />
+              </Tooltip>
+            </template>
+          </template>
+        </Table>
+      </section>
+
+      <Modal
+        :mask-closable="false"
+        v-model:open="operationVisible"
+        :confirm-loading="submitting"
+        :title="operation === 'build' ? '构建推荐数据产品' : '发布到 XnetMLOps'"
+        ok-text="确认执行"
+        width="560px"
+        @ok="submitOperation"
+      >
+        <Alert
+          :message="operation === 'build' ? '写入级别 D2' : '发布级别 D3'"
+          class="operation-alert"
+          show-icon
+          type="warning"
+        />
+        <Form
+          :disabled="
+            pageRequestState.writePending > 0 ||
+            Object.keys(pageRequestState.failures).length > 0
+          "
+          layout="vertical"
+        >
+          <FormItem label="数据产品版本" required>
+            <Input
+              v-model:value="formState.productVersion"
+              :disabled="operation === 'publish'"
+            />
+          </FormItem>
+          <FormItem v-if="operation === 'build'" label="血缘引用" required>
+            <Input v-model:value="formState.lineageReference" />
+          </FormItem>
+          <FormItem label="审批号" required>
+            <Input
+              v-model:value="formState.approvalId"
+              placeholder="例如 APR-20260827-001"
+            />
+          </FormItem>
+        </Form>
+        <Descriptions
+          v-if="operation === 'publish' && selectedProduct"
+          bordered
+          size="small"
+          :column="1"
+        >
+          <DescriptionsItem label="记录数">{{
+            formatCount(selectedProduct.rowCount)
+          }}</DescriptionsItem>
+          <DescriptionsItem label="当前状态">{{
+            statusLabel(selectedProduct.status)
+          }}</DescriptionsItem>
+          <DescriptionsItem label="血缘">{{
+            selectedProduct.lineageReference
+          }}</DescriptionsItem>
+        </Descriptions>
+      </Modal>
+    </div></DataPage
+  >
 </template>
 
 <style scoped>
+.product-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
 .product-page {
   max-width: 1480px;
   margin: 0 auto;

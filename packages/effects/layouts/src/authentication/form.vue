@@ -1,3 +1,14 @@
+<!--
+#!/usr/bin/env vue
+# -*- coding: utf-8 -*-
+# Copyright (C) 2026 Synapxnet. All rights reserved.
+# This file is Synapxnet Proprietary and Confidential. It is strictly
+# forbidden to copy, distribute, or use without explicit authorization.
+# 复赛认证视觉与决赛入口 / Semifinal authentication visuals and finals navigation
+# Author: maoyo | Department: 研发部 | Date: 2026-09-17
+# Version: 1.3.0 | Security Level: INTERNAL
+# Maintainer: maoyo | Email: synapxnet@gmail.com
+-->
 <script setup lang="ts">
 defineOptions({
   name: 'AuthenticationFormView',
@@ -6,8 +17,8 @@ defineOptions({
 
 <template>
   <div class="auth-form-view">
-    <slot></slot>
     <div class="auth-form-inner">
+      <slot></slot>
       <RouterView v-slot="{ Component, route }">
         <Transition appear mode="out-in" name="slide-right">
           <KeepAlive :include="['Login']">
@@ -32,13 +43,13 @@ defineOptions({
   position: relative;
   box-sizing: border-box;
   display: flex;
+  min-height: calc(100dvh - 56px);
   align-items: center;
   justify-content: center;
-  min-height: calc(100dvh - 56px);
   padding: 88px clamp(32px, 4vw, 64px) 64px;
-  background: var(--auth-panel-bg);
   border: 1px solid var(--auth-panel-border);
   border-radius: 8px;
+  background: var(--auth-panel-bg);
   box-shadow:
     0 24px 64px var(--auth-panel-shadow),
     inset 0 1px 0 rgb(255 255 255 / 10%);
@@ -60,8 +71,8 @@ defineOptions({
   left: 24px;
   display: flex;
   justify-content: center;
-  font-size: 12px;
   text-align: center;
+  font-size: 12px;
 }
 
 @keyframes form-enter {
@@ -69,7 +80,6 @@ defineOptions({
     opacity: 0;
     transform: translateY(12px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);

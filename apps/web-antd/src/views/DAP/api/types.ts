@@ -29,6 +29,9 @@ export interface ApiKey {
   createdAt: string;
 }
 
+/** 列表与吊销公开摘要不包含密钥正文。 Public list and revoke summaries exclude the secret key. */
+export type ApiKeySummary = Omit<ApiKey, 'secretKey'>;
+
 export interface ApiCallLog {
   id: number;
   apiConfigId: number;

@@ -1,10 +1,12 @@
+> GOAI 决赛版本 **1.3.0**：源码范围、构建验证与运行边界见 [交付说明](docs/GOAI-V1.3.0-SOURCE-DELIVERY.md)。
+
 <div align="center">
 
 # XnetDataops Web
 
 **XnetDataops 数据工程与治理平台的 Web 控制台**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-1677ff.svg)](http://www.xnetdataops.synapxnet.cn) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-1.3.0-1677ff.svg)](http://www.xnetdataops.synapxnet.cn) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
 
 [在线体验](http://www.xnetdataops.synapxnet.cn) · [后端仓库 XnetDataops](https://github.com/synapxnet/XnetDataops) · [OpenXnet 开源社区](https://openxnet.synapxnet.com) · [查看许可](./LICENSE)
 

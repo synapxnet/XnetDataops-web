@@ -35,6 +35,8 @@ import { LayoutTabbar } from './tabbar';
 
 defineOptions({ name: 'BasicLayout' });
 const props = defineProps({
+  beforeOrganizationChange: { type: Function, default: () => true },
+  contentKey: { type: Number, default: 0 },
   contentEnabled: {
     type: Boolean,
     default: true,
@@ -71,7 +73,7 @@ const selectedOrg = ref<SelectedOrg>({
   teamUid: null,
 });
 
-/** 根据当前组织范围生成级联选择器路径。 */
+/** 根据当前组织范围生成级联选择器路径。 Derive the cascader path from the active organization. */
 const updateSelectedOrgPath = () => {
   const path = [];
   if (selectedOrg.value.tenantUid) path.push(selectedOrg.value.tenantUid);
@@ -80,8 +82,9 @@ const updateSelectedOrgPath = () => {
   selectedOrgPath.value = path;
 };
 
-/** 处理当前会话内的组织选择变化。 */
+/** 处理当前会话内的组织选择变化。 Confirm unsaved edits before changing the session organization. */
 function handleOrganizationChange(value: string[]) {
+  if (!props.beforeOrganizationChange()) return;
   const [tenantUid, deptUid, teamUid] = value;
 
   selectedOrg.value = {
@@ -95,7 +98,7 @@ function handleOrganizationChange(value: string[]) {
   emit('organizationChange', value);
 }
 
-/** 判断当前选择路径是否仍包含在服务端返回的可见组织树中。 */
+/** 判断当前选择路径是否仍包含在服务端返回的可见组织树中。 Check whether the selected path remains in the server-provided visible tree. */
 function isVisibleOrganizationPath(
   nodes: OrganizationOption[],
   path: string[],
@@ -107,7 +110,7 @@ function isVisibleOrganizationPath(
   return isVisibleOrganizationPath(node.children ?? [], path, depth + 1);
 }
 
-/** 清空已失效的组织选择，避免跨账号沿用旧权限范围。 */
+/** 清空已失效的组织选择，避免跨账号沿用旧权限范围。 Discard invalid organization choices to avoid reusing another account scope. */
 function resetSelectedOrganization() {
   selectedOrg.value = {
     deptUid: null,
@@ -119,7 +122,7 @@ function resetSelectedOrganization() {
   emit('organizationChange', []);
 }
 
-/** 返回第一条完整团队路径，并可优先选择已开启数据访问的团队。 */
+/** 返回第一条完整团队路径，并可优先选择已开启数据访问的团队。 Find a complete team path with optional data-access preference. */
 function findFirstOrganizationPath(
   nodes: OrganizationOption[],
   requireDataAccess: boolean,
@@ -446,7 +449,7 @@ const headerSlots = computed(() => {
 
     <!-- 主体内容 -->
     <template #content>
-      <LayoutContent v-if="props.contentEnabled" />
+      <LayoutContent :key="props.contentKey" v-if="props.contentEnabled" />
       <slot v-else name="content-placeholder"></slot>
     </template>
 

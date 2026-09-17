@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import DataPage from '#/components/data-page/index.vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -6,6 +7,8 @@ import { useUserStore } from '@vben/stores';
 
 import {
   ApartmentOutlined,
+  ArrowRightOutlined,
+  SettingOutlined,
   ApiOutlined,
   AuditOutlined,
   CodeOutlined,
@@ -17,15 +20,7 @@ import {
   ScheduleOutlined,
   SwapOutlined,
 } from '@ant-design/icons-vue';
-import {
-  Card,
-  Col,
-  Progress,
-  Row,
-  Statistic,
-  Table,
-  Tag,
-} from 'ant-design-vue';
+import { Button, Card, Progress, Statistic, Table, Tag } from 'ant-design-vue';
 
 import {
   dapRequestClient,
@@ -44,7 +39,7 @@ import {
 const router = useRouter();
 const userStore = useUserStore();
 
-/** 判断当前登录用户是否具有平台管理权限。 */
+/** 判断当前用户的管理权限，仅向管理员展示系统入口。 Check current management permission and show the system entry only to administrators. */
 const isAdministrator = computed(() =>
   (userStore.userInfo?.roles ?? []).some(
     (role) => role.toUpperCase() === 'ADMIN',
@@ -54,105 +49,122 @@ const isAdministrator = computed(() =>
 const stats = ref([
   {
     title: '数据源',
-    value: 0,
+    value: undefined as number | undefined,
     icon: DatabaseOutlined,
-    color: '#1890ff',
     path: '/DSM/datasource/list',
     key: 'dsm',
   },
   {
     title: '同步任务',
-    value: 0,
+    value: undefined as number | undefined,
     icon: SwapOutlined,
-    color: '#52c41a',
     path: '/DIM/task/list',
     key: 'dim',
   },
   {
     title: 'SQL脚本',
-    value: 0,
+    value: undefined as number | undefined,
     icon: CodeOutlined,
-    color: '#722ed1',
     path: '/DDV/script/list',
     key: 'ddv',
   },
   {
     title: '工作流',
-    value: 0,
+    value: undefined as number | undefined,
     icon: ScheduleOutlined,
-    color: '#fa8c16',
     path: '/TSK/workflow/list',
     key: 'tsk',
   },
   {
     title: '质量规则',
-    value: 0,
+    value: undefined as number | undefined,
     icon: SafetyCertificateOutlined,
-    color: '#eb2f96',
     path: '/DQM/rule/list',
     key: 'dqm',
   },
   {
     title: '元数据表',
-    value: 0,
+    value: undefined as number | undefined,
     icon: ApartmentOutlined,
-    color: '#13c2c2',
     path: '/DGV/catalog/list',
     key: 'dgv',
   },
   {
     title: '数据资产',
-    value: 0,
+    value: undefined as number | undefined,
     icon: GoldOutlined,
-    color: '#faad14',
     path: '/DAS/asset/list',
     key: 'das',
   },
   {
     title: '数据API',
-    value: 0,
+    value: undefined as number | undefined,
     icon: ApiOutlined,
-    color: '#2f54eb',
     path: '/DAP/config/list',
     key: 'dap',
   },
   {
     title: '脱敏规则',
-    value: 0,
+    value: undefined as number | undefined,
     icon: EyeInvisibleOutlined,
-    color: '#531dab',
     path: '/DMS/rule/list',
     key: 'dms',
   },
   {
     title: '监控项',
-    value: 0,
+    value: undefined as number | undefined,
     icon: MonitorOutlined,
-    color: '#08979c',
     path: '/DOB/monitor/list',
     key: 'dob',
   },
   {
     title: '审计日志',
-    value: 0,
+    value: undefined as number | undefined,
     icon: AuditOutlined,
-    color: '#d4380d',
     path: '/DAU/log/list',
     key: 'dau',
   },
 ]);
 
-const recentSyncLogs = ref<any[]>([]);
+const health = ref<Array<{ title: string; value: number | null }>>([
+  { title: '数据源可用', value: null },
+  { title: '同步任务上线', value: null },
+  { title: '质量通过率', value: null },
+  { title: 'SLA达标率', value: null },
+]);
+/** 按真实记录计算百分比，没有记录时保持未知。 Calculate a percentage from actual records while keeping empty sources unknown. */
+function fraction(rows: any[], test: (row: any) => boolean) {
+  return rows.length
+    ? Math.round((rows.filter(test).length / rows.length) * 100)
+    : null;
+}
+/** 从质量报告与SLA记录读取健康证据。 Read health evidence from quality reports and SLA records. */
+async function loadHealth() {
+  const [reports, slas] = await Promise.allSettled([
+    dqmRequestClient.get('/reports'),
+    dobRequestClient.get('/slas'),
+  ]);
+  if (reports.status === 'fulfilled' && Array.isArray(reports.value)) {
+    const rows = reports.value.filter(
+      (report) =>
+        typeof report.totalRows === 'number' &&
+        report.totalRows > 0 &&
+        typeof report.failedRows === 'number',
+    );
+    const total = rows.reduce((sum, row) => sum + row.totalRows, 0),
+      failed = rows.reduce((sum, row) => sum + row.failedRows, 0);
+    health.value[2]!.value = total
+      ? Math.round(((total - failed) / total) * 1000) / 10
+      : null;
+  }
+  if (slas.status === 'fulfilled' && Array.isArray(slas.value))
+    health.value[3]!.value = fraction(
+      slas.value,
+      (row) => row.slaStatus === 'met',
+    );
+}
 const recentAlerts = ref<any[]>([]);
-const recentWorkflows = ref<any[]>([]);
 const recentHistory = ref<any[]>([]);
-
-const syncLogColumns = [
-  { title: '任务名', dataIndex: 'taskName', key: 'taskName', ellipsis: true },
-  { title: '状态', dataIndex: 'status', key: 'status', width: 90 },
-  { title: '读取行', dataIndex: 'rowsRead', key: 'rowsRead', width: 80 },
-  { title: '写入行', dataIndex: 'rowsWritten', key: 'rowsWritten', width: 80 },
-];
 
 const alertColumns = [
   { title: '告警级别', dataIndex: 'alertLevel', key: 'alertLevel', width: 90 },
@@ -164,23 +176,6 @@ const alertColumns = [
     key: 'triggeredAt',
     width: 160,
   },
-];
-
-const workflowColumns = [
-  {
-    title: '工作流',
-    dataIndex: 'workflowName',
-    key: 'workflowName',
-    ellipsis: true,
-  },
-  { title: '状态', dataIndex: 'status', key: 'status', width: 90 },
-  {
-    title: '触发方式',
-    dataIndex: 'triggerType',
-    key: 'triggerType',
-    width: 90,
-  },
-  { title: '开始时间', dataIndex: 'startTime', key: 'startTime', width: 160 },
 ];
 
 const historyColumns = [
@@ -210,6 +205,7 @@ const statusColorMap: Record<string, string> = {
   info: 'blue',
 };
 
+/** 载入页面统计资料。 Load statistics displayed on the page. */
 async function fetchStats() {
   const results = await Promise.allSettled([
     dsmRequestClient.get('/datasources'),
@@ -228,10 +224,21 @@ async function fetchStats() {
   results.forEach((result, index) => {
     if (result.status === 'fulfilled' && Array.isArray(result.value)) {
       stats.value[index]!.value = result.value.length;
+      if (index === 0)
+        health.value[0]!.value = fraction(
+          result.value,
+          (row) => row.status === 'active',
+        );
+      if (index === 1)
+        health.value[1]!.value = fraction(
+          result.value,
+          (row) => row.status === 'online',
+        );
     }
   });
 }
 
+/** 载入近期质量告警与查询历史。 Load recent quality alerts and query history. */
 async function fetchRecentData() {
   try {
     const alerts = await dqmRequestClient.get('/alerts');
@@ -239,7 +246,7 @@ async function fetchRecentData() {
       recentAlerts.value = alerts.slice(0, 5);
     }
   } catch {
-    /* ignore */
+    // 公共请求态展示不可用；不将错误计为零。 Shared request state exposes unavailability without reporting zero.
   }
 
   try {
@@ -248,261 +255,331 @@ async function fetchRecentData() {
       recentHistory.value = history.slice(0, 5);
     }
   } catch {
-    /* ignore */
+    // 公共请求态展示不可用；不将错误计为零。 Shared request state exposes unavailability without reporting zero.
   }
 }
 
 onMounted(() => {
   fetchStats();
   fetchRecentData();
+  loadHealth();
 });
 </script>
 
 <template>
-  <div class="p-4">
-    <Row :gutter="[16, 16]">
-      <Col
-        :xs="12"
-        :sm="8"
-        :md="6"
-        :lg="4"
-        :xl="4"
-        v-for="(item, index) in stats"
-        :key="index"
-      >
-        <Card
-          hoverable
-          size="small"
-          @click="router.push(item.path)"
-          style="cursor: pointer"
+  <DataPage
+    title="数据工作台"
+    description="当前组织的数据资源、质量状态与最近活动。"
+  >
+    <div class="overview-workspace">
+      <div class="overview-top">
+        <section
+          class="overview-directory"
+          aria-labelledby="dataops-resource-heading"
         >
-          <Statistic
-            :title="item.title"
-            :value="item.value"
-            :value-style="{ color: item.color, fontSize: '24px' }"
-          >
-            <template #prefix>
-              <component
-                :is="item.icon"
-                :style="{ color: item.color, fontSize: '20px' }"
-              />
-            </template>
-          </Statistic>
-        </Card>
-      </Col>
-    </Row>
-
-    <Row :gutter="[16, 16]" class="mt-4">
-      <Col :xs="24" :lg="8">
-        <Card title="平台功能模块" size="small">
-          <div style="display: flex; flex-wrap: wrap; gap: 8px">
-            <Tag
-              color="blue"
-              style="cursor: pointer"
-              @click="router.push('/DSM/datasource/list')"
+          <div class="overview-section-heading">
+            <h2 id="dataops-resource-heading">数据资源</h2>
+            <span>当前组织</span>
+          </div>
+          <div class="overview-modules">
+            <button
+              v-for="item in stats"
+              :key="item.key"
+              class="overview-module"
+              type="button"
+              @click="router.push(item.path)"
             >
-              数据源管理
-            </Tag>
-            <Tag
-              color="green"
-              style="cursor: pointer"
-              @click="router.push('/DIM/task/list')"
-            >
-              数据集成
-            </Tag>
-            <Tag
-              color="purple"
-              style="cursor: pointer"
-              @click="router.push('/DDV/script/list')"
-            >
-              数据开发
-            </Tag>
-            <Tag
-              color="orange"
-              style="cursor: pointer"
-              @click="router.push('/TSK/workflow/list')"
-            >
-              任务调度
-            </Tag>
-            <Tag
-              color="magenta"
-              style="cursor: pointer"
-              @click="router.push('/DQM/rule/list')"
-            >
-              数据质量
-            </Tag>
-            <Tag
-              color="cyan"
-              style="cursor: pointer"
-              @click="router.push('/DGV/catalog/list')"
-            >
-              数据治理
-            </Tag>
-            <Tag
-              color="gold"
-              style="cursor: pointer"
-              @click="router.push('/DAS/asset/list')"
-            >
-              数据资产
-            </Tag>
-            <Tag
-              color="geekblue"
-              style="cursor: pointer"
-              @click="router.push('/DAP/config/list')"
-            >
-              数据API
-            </Tag>
-            <Tag
-              color="volcano"
-              style="cursor: pointer"
-              @click="router.push('/DMS/rule/list')"
-            >
-              数据脱敏
-            </Tag>
-            <Tag
-              color="lime"
-              style="cursor: pointer"
-              @click="router.push('/DOB/monitor/list')"
-            >
-              数据可观测
-            </Tag>
-            <Tag
-              color="red"
-              style="cursor: pointer"
-              @click="router.push('/DAU/log/list')"
-            >
-              数据审计
-            </Tag>
-            <Tag
+              <span class="overview-module-icon"
+                ><component :is="item.icon"
+              /></span>
+              <span class="overview-module-name">{{ item.title }}</span>
+              <Statistic :value="item.value ?? '—'" />
+              <ArrowRightOutlined class="overview-module-arrow" />
+            </button>
+            <button
               v-if="isAdministrator"
-              style="cursor: pointer"
+              type="button"
+              class="overview-module"
               @click="router.push('/USR/user/list')"
             >
-              用户管理
-            </Tag>
+              <span class="overview-module-icon"><SettingOutlined /></span>
+              <span class="overview-module-name">用户管理</span>
+              <span class="overview-module-admin">管理</span>
+              <ArrowRightOutlined class="overview-module-arrow" />
+            </button>
           </div>
-        </Card>
-      </Col>
-      <Col :xs="24" :lg="16">
-        <Card title="数据管道健康度" size="small">
-          <Row :gutter="16">
-            <Col :span="6">
-              <div style="text-align: center">
-                <Progress
-                  type="circle"
-                  :percent="95"
-                  stroke-color="#52c41a"
-                  :size="80"
-                />
-                <div class="text-muted-foreground mt-2">数据源可用</div>
+        </section>
+        <section
+          class="overview-health"
+          aria-labelledby="dataops-health-heading"
+        >
+          <div class="overview-section-heading">
+            <h2 id="dataops-health-heading">数据状态</h2>
+            <span>按现有记录统计</span>
+          </div>
+          <div class="health-list">
+            <div v-for="item in health" :key="item.title" class="health-item">
+              <div class="health-label">
+                <span>{{ item.title }}</span
+                ><strong>{{
+                  item.value === null ? '—' : `${item.value}%`
+                }}</strong>
               </div>
-            </Col>
-            <Col :span="6">
-              <div style="text-align: center">
-                <Progress
-                  type="circle"
-                  :percent="88"
-                  stroke-color="#1890ff"
-                  :size="80"
-                />
-                <div class="text-muted-foreground mt-2">同步成功率</div>
-              </div>
-            </Col>
-            <Col :span="6">
-              <div style="text-align: center">
-                <Progress
-                  type="circle"
-                  :percent="92"
-                  stroke-color="#722ed1"
-                  :size="80"
-                />
-                <div class="text-muted-foreground mt-2">质量通过率</div>
-              </div>
-            </Col>
-            <Col :span="6">
-              <div style="text-align: center">
-                <Progress
-                  type="circle"
-                  :percent="97"
-                  stroke-color="#faad14"
-                  :size="80"
-                />
-                <div class="text-muted-foreground mt-2">SLA达标率</div>
-              </div>
-            </Col>
-          </Row>
-        </Card>
-      </Col>
-    </Row>
-
-    <Row :gutter="[16, 16]" class="mt-4">
-      <Col :xs="24" :lg="12">
+              <Progress
+                v-if="item.value !== null"
+                :percent="item.value"
+                :show-info="false"
+                stroke-color="hsl(var(--primary))"
+                size="small"
+              />
+              <div v-else class="health-empty"><span>暂无可计算记录</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="overview-activity">
         <Card title="质量告警" size="small">
-          <template v-if="recentAlerts.length > 0">
-            <Table
-              :columns="alertColumns"
-              :data-source="recentAlerts"
-              row-key="id"
-              size="small"
-              :pagination="false"
-            >
-              <template #bodyCell="{ column, record: _record }">
-                <template v-if="column.key === 'alertLevel'">
-                  <Tag
-                    :color="
-                      statusColorMap[(_record as any).alertLevel] || 'default'
-                    "
-                  >
-                    {{ (_record as any).alertLevel }}
-                  </Tag>
-                </template>
-                <template v-if="column.key === 'status'">
-                  <Tag
-                    :color="
-                      statusColorMap[(_record as any).status] || 'default'
-                    "
-                  >
-                    {{ (_record as any).status }}
-                  </Tag>
-                </template>
+          <template #extra
+            ><Button type="link" @click="router.push('/DQM/alert/list')"
+              >全部告警 <ArrowRightOutlined /></Button
+          ></template>
+          <Table
+            :scroll="{ x: 'max-content' }"
+            :columns="alertColumns"
+            :data-source="recentAlerts"
+            row-key="id"
+            size="small"
+            :pagination="false"
+            :locale="{ emptyText: '当前没有质量告警' }"
+          >
+            <template #bodyCell="{ column, record: _record }">
+              <template v-if="column.key === 'alertLevel'">
+                <Tag
+                  :color="
+                    statusColorMap[(_record as any).alertLevel] || 'default'
+                  "
+                  >{{ (_record as any).alertLevel }}</Tag
+                >
               </template>
-            </Table>
-          </template>
-          <template v-else>
-            <p class="text-muted-foreground py-[30px] text-center">暂无告警</p>
-          </template>
-        </Card>
-      </Col>
-      <Col :xs="24" :lg="12">
-        <Card title="最近查询历史" size="small">
-          <template v-if="recentHistory.length > 0">
-            <Table
-              :columns="historyColumns"
-              :data-source="recentHistory"
-              row-key="id"
-              size="small"
-              :pagination="false"
-            >
-              <template #bodyCell="{ column, record: _record }">
-                <template v-if="column.key === 'executeStatus'">
-                  <Tag
-                    :color="
-                      (_record as any).executeStatus === 'success'
-                        ? 'green'
-                        : 'red'
-                    "
-                  >
-                    {{ (_record as any).executeStatus }}
-                  </Tag>
-                </template>
+              <template v-if="column.key === 'status'">
+                <Tag
+                  :color="statusColorMap[(_record as any).status] || 'default'"
+                  >{{ (_record as any).status }}</Tag
+                >
               </template>
-            </Table>
-          </template>
-          <template v-else>
-            <p class="text-muted-foreground py-[30px] text-center">暂无数据</p>
-          </template>
+            </template>
+          </Table>
         </Card>
-      </Col>
-    </Row>
-  </div>
+        <Card title="最近查询" size="small">
+          <template #extra
+            ><Button type="link" @click="router.push('/DDV/history')"
+              >查询历史 <ArrowRightOutlined /></Button
+          ></template>
+          <Table
+            :scroll="{ x: 'max-content' }"
+            :columns="historyColumns"
+            :data-source="recentHistory"
+            row-key="id"
+            size="small"
+            :pagination="false"
+            :locale="{ emptyText: '当前没有查询记录' }"
+          >
+            <template #bodyCell="{ column, record: _record }">
+              <template v-if="column.key === 'executeStatus'">
+                <Tag
+                  :color="
+                    (_record as any).executeStatus === 'success'
+                      ? 'green'
+                      : 'red'
+                  "
+                  >{{ (_record as any).executeStatus }}</Tag
+                >
+              </template>
+            </template>
+          </Table>
+        </Card>
+      </div>
+    </div>
+  </DataPage>
 </template>
+
+<style scoped>
+.overview-workspace {
+  display: grid;
+  gap: 18px;
+}
+.overview-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+}
+.overview-directory,
+.overview-health {
+  min-width: 0;
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: var(--dataops-radius);
+  background: hsl(var(--card));
+}
+.overview-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 16px 18px 13px;
+  border-bottom: 1px solid hsl(var(--border) / 0.7);
+}
+.overview-section-heading h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.overview-section-heading > span {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+.overview-modules {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 8px;
+}
+.overview-module {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  min-height: 60px;
+  padding: 10px;
+  color: hsl(var(--foreground));
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: calc(var(--dataops-radius) * 0.65);
+  cursor: pointer;
+}
+.overview-module:hover,
+.overview-module:focus-visible {
+  background: hsl(var(--primary) / 0.07);
+}
+.overview-module:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: -2px;
+}
+.overview-module-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.08);
+  border-radius: calc(var(--dataops-radius) * 0.55);
+  font-size: 16px;
+}
+.overview-module-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 550;
+  white-space: nowrap;
+}
+.overview-module :deep(.ant-statistic-content) {
+  font-size: 17px;
+  color: hsl(var(--foreground));
+}
+.overview-module-arrow {
+  display: none;
+  color: hsl(var(--primary));
+  font-size: 12px;
+}
+.overview-module-admin {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+.health-list {
+  display: grid;
+  padding: 6px 18px 10px;
+}
+.health-item {
+  padding: 11px 0;
+}
+.health-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.health-label strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  font-weight: 600;
+}
+.health-empty {
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  border-top: 4px solid hsl(var(--muted));
+  margin-top: 8px;
+  padding-top: 3px;
+}
+.health-item :deep(.ant-progress) {
+  margin-bottom: 0;
+}
+.overview-activity {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.overview-activity > .ant-card {
+  min-width: 0;
+}
+.overview-activity :deep(.ant-card-body) {
+  padding: 0;
+  min-height: 218px;
+}
+.overview-activity :deep(.ant-card-head) {
+  padding-inline: 16px;
+}
+.overview-activity :deep(.ant-btn-link) {
+  padding-inline: 0;
+  font-size: 12px;
+}
+@media (max-width: 1100px) {
+  .overview-top {
+    grid-template-columns: minmax(0, 1fr) 240px;
+  }
+  .overview-modules {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .overview-module {
+    min-height: 50px;
+  }
+  .overview-activity {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  .overview-top {
+    grid-template-columns: 1fr;
+  }
+  .health-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 22px;
+  }
+}
+@media (max-width: 480px) {
+  .overview-module {
+    gap: 7px;
+    padding: 8px;
+  }
+  .overview-module-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .overview-section-heading {
+    padding-inline: 14px;
+  }
+  .health-list {
+    padding-inline: 14px;
+  }
+}
+</style>

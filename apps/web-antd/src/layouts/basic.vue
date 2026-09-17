@@ -3,7 +3,7 @@ import type { NotificationItem } from '@vben/layouts';
 
 import type { OrganizationTreeNode } from '#/api/core';
 
-import { computed, onMounted, provide, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 
 import { AuthenticationLoginExpiredModal } from '@vben/common-ui';
 import { useWatermark } from '@vben/hooks';
@@ -20,43 +20,39 @@ import { openWindow } from '@vben/utils';
 
 import { getOrganizationTreeApi } from '#/api/core';
 import { useAuthStore } from '#/store';
+import {
+  clearPageStates,
+  hasUnsavedPages,
+} from '#/components/data-page/request-state';
+import { skinPanelOpen } from '#/appearance/skin';
 import LoginForm from '#/views/_core/authentication/login.vue';
+import ResidentAgentPanel from '#/components/resident/ResidentAgentPanel.vue';
 
 const OPENXNET_URL = 'https://openxnet.synapxnet.com';
 const FRONTEND_REPOSITORY_URL = 'https://github.com/synapxnet/XnetDataops-web';
 const BACKEND_REPOSITORY_URL = 'https://github.com/synapxnet/XnetDataops';
 const ORGANIZATION_SCOPE_KEY = 'synapxnet:organization-scope';
 
-const notifications = ref<NotificationItem[]>([
-  {
-    avatar: 'https://avatar.vercel.sh/synapxnet.svg?text=SX',
-    date: '3小时前',
-    isRead: true,
-    message: '描述信息描述信息描述信息',
-    title: '收到了 14 份新周报',
-  },
-  {
-    avatar: 'https://avatar.vercel.sh/1',
-    date: '刚刚',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '朱偏右 回复了你',
-  },
-  {
-    avatar: 'https://avatar.vercel.sh/1',
-    date: '2024-01-01',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '曲丽丽 评论了你',
-  },
-  {
-    avatar: 'https://avatar.vercel.sh/satori',
-    date: '1天前',
-    isRead: false,
-    message: '描述信息描述信息描述信息',
-    title: '代办提醒',
-  },
-]);
+const notifications = ref<NotificationItem[]>([]);
+const contentEpoch = ref(0);
+/** 换组织前保护当前团队的未保存草稿。 Protect unsaved drafts before changing the active organization. */
+function confirmOrganizationChange() {
+  return (
+    !hasUnsavedPages() ||
+    window.confirm('切换组织会丢弃未保存的修改，继续切换？')
+  );
+}
+/** 重新加载业务内容并清除旧组织缓存。 Reload business content and discard stale organization caches. */
+function refreshBusinessContent() {
+  clearPageStates();
+  contentEpoch.value++;
+}
+onMounted(() =>
+  window.addEventListener('dataops:refresh-page', refreshBusinessContent),
+);
+onBeforeUnmount(() =>
+  window.removeEventListener('dataops:refresh-page', refreshBusinessContent),
+);
 
 const userStore = useUserStore();
 const authStore = useAuthStore();
@@ -67,6 +63,13 @@ const showDot = computed(() =>
 );
 
 const menus = computed(() => [
+  {
+    handler: () => {
+      skinPanelOpen.value = true;
+    },
+    icon: BookOpenText,
+    text: '外观与皮肤',
+  },
   {
     handler: () => {
       openWindow(OPENXNET_URL, {
@@ -131,7 +134,7 @@ const selectedOrganization = ref<SelectedOrganization>({
   tenantUid: null,
 });
 
-/** 返回组织树中第一条完整团队路径，可优先筛选已开启数据访问的团队。 */
+/** 返回组织树中第一条完整团队路径，可优先筛选已开启数据访问的团队。 Find the first complete team path, preferring teams with data access when requested. */
 function findFirstOrganizationPath(
   nodes: OrganizationTreeNode[],
   requireDataAccess: boolean,
@@ -148,7 +151,7 @@ function findFirstOrganizationPath(
   return [];
 }
 
-/** 根据级联路径查找服务端返回的组织节点。 */
+/** 根据级联路径查找服务端返回的组织节点。 Resolve a node from the server-provided organization tree. */
 function findOrganizationNode(
   nodes: OrganizationTreeNode[],
   path: string[],
@@ -160,7 +163,7 @@ function findOrganizationNode(
   return findOrganizationNode(node.children ?? [], path, depth + 1);
 }
 
-/** 仅在当前页签保存组织范围，退出或换账号后不复用。 */
+/** 仅在当前页签保存组织范围，退出或换账号后不复用。 Store scope only for this tab and discard it on logout or account changes. */
 function writeOrganizationScope(scope: SelectedOrganization) {
   if (!scope.tenantUid || !scope.deptUid || !scope.teamUid) {
     globalThis.sessionStorage?.removeItem(ORGANIZATION_SCOPE_KEY);
@@ -172,7 +175,7 @@ function writeOrganizationScope(scope: SelectedOrganization) {
   );
 }
 
-/** 加载当前用户被后端明确授权的组织树。 */
+/** 加载当前用户被后端明确授权的组织树。 Load the organization tree explicitly authorized for the current user. */
 async function fetchOrganizationTree() {
   try {
     organizationTree.value = await getOrganizationTreeApi();
@@ -196,7 +199,7 @@ async function fetchOrganizationTree() {
   }
 }
 
-/** 更新当前会话的组织范围，不在浏览器中持久化跨账号权限状态。 */
+/** 更新当前会话的组织范围，不在浏览器中持久化跨账号权限状态。 Update session organization scope and remount business content without persisting cross-account permissions. */
 function handleOrganizationChange(value: string[] = []) {
   const [tenantUid, deptUid, teamUid] = value;
   const selectedNode = findOrganizationNode(organizationTree.value, value);
@@ -208,6 +211,7 @@ function handleOrganizationChange(value: string[] = []) {
     tenantUid: tenantUid || null,
   };
   writeOrganizationScope(selectedOrganization.value);
+  refreshBusinessContent();
 }
 
 // 根据组织树加载状态返回当前作用域标题。
@@ -257,20 +261,41 @@ onMounted(fetchOrganizationTree);
 
 <template>
   <BasicLayout
+    :content-key="contentEpoch"
+    :before-organization-change="confirmOrganizationChange"
     :content-enabled="organizationTreeLoaded && selectedOrganization.dataAccess"
     :tree-data="organizationTree"
     @clear-preferences-and-logout="handleLogout"
     @organization-change="handleOrganizationChange"
   >
+    <template #header-right-45>
+      <ResidentAgentPanel
+        platform="dataops"
+        :scope="selectedOrganization"
+        :enabled="organizationTreeLoaded"
+      />
+    </template>
     <template #content-placeholder>
-      <section
-        class="flex min-h-full items-center justify-center bg-white dark:bg-gray-950"
-      >
-        <div class="max-w-md px-8 text-center">
-          <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+      <section class="data-scope-empty">
+        <div class="data-scope-heading">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            aria-hidden="true"
+          >
+            <path d="M3 8h18v12H3zM3 8l3-4h5l2 4M8 13h8M8 16h5" />
+          </svg>
+          <span>组织数据</span>
+        </div>
+        <div class="data-scope-body">
+          <h2>
             {{ organizationScopeTitle }}
           </h2>
-          <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+          <p>
             {{ organizationScopeMessage }}
           </p>
         </div>
@@ -307,3 +332,40 @@ onMounted(fetchOrganizationTree);
     </template>
   </BasicLayout>
 </template>
+
+<style scoped>
+.data-scope-empty {
+  margin: var(--dataops-space);
+  max-width: 960px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--dataops-radius);
+}
+.data-scope-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 16px 20px;
+  border-bottom: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  font-weight: 600;
+}
+.data-scope-heading svg {
+  color: hsl(var(--primary));
+}
+.data-scope-body {
+  padding: 32px 24px 40px;
+}
+.data-scope-body h2 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.data-scope-body p {
+  margin: 0;
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  line-height: 1.8;
+}
+</style>

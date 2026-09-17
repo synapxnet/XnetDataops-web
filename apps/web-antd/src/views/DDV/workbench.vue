@@ -10,6 +10,8 @@ import type {
   QueryResultColumn,
 } from './api/types';
 
+import DataPage from '#/components/data-page/index.vue';
+import { pageState } from '#/components/data-page/request-state';
 import { computed, onMounted, ref } from 'vue';
 
 import {
@@ -68,8 +70,13 @@ const queryError = ref('');
 const catalogLoading = ref(false);
 const tableLoading = ref(false);
 const queryLoading = ref(false);
+let sourceGeneration = 0,
+  namespaceGeneration = 0,
+  tableGeneration = 0,
+  queryGeneration = 0;
+const sqlEdited = ref(false);
 
-/** 根据当前主题生成 SQL 工作台使用的语义颜色。 */
+/** 根据当前主题生成 SQL 工作台使用的语义颜色。 Create semantic SQL workspace colors from the active theme. */
 const workbenchStyle = computed<CSSProperties>(() => ({
   '--workbench-accent': token.value.colorPrimary,
   '--workbench-bg': token.value.colorBgLayout,
@@ -81,12 +88,12 @@ const workbenchStyle = computed<CSSProperties>(() => ({
   '--workbench-text-muted': token.value.colorTextSecondary,
 }));
 
-/** 返回当前选择的数据源。 */
+/** 返回当前选择的数据源。 Return the selected data source. */
 const selectedSource = computed(() =>
   sources.value.find((source) => source.id === selectedSourceId.value),
 );
 
-/** 返回经过关键词过滤的数据表目录。 */
+/** 返回经过关键词过滤的数据表目录。 Filter the table catalog by keyword. */
 const filteredTables = computed(() => {
   const keyword = tableSearch.value.trim().toLowerCase();
   if (!keyword) return tables.value;
@@ -95,31 +102,31 @@ const filteredTables = computed(() => {
   );
 });
 
-/** 返回编辑器当前关联的数据对象名称。 */
+/** 返回编辑器当前关联的数据对象名称。 Return the data object associated with the editor. */
 const selectedObjectName = computed(() => {
   if (!selectedTable.value) return 'SQL';
   return `${selectedNamespace.value}.${selectedTable.value}`;
 });
 
-/** 将预览结果字段转换为 Ant Design 表格列。 */
+/** 将预览结果字段转换为 Ant Design 表格列。 Convert preview fields to Ant Design columns. */
 const previewTableColumns = computed(() =>
   toAntColumns(previewResult.value?.columns ?? []),
 );
 
-/** 将查询结果字段转换为 Ant Design 表格列。 */
+/** 将查询结果字段转换为 Ant Design 表格列。 Convert query fields to Ant Design columns. */
 const queryTableColumns = computed(() =>
   toAntColumns(queryResult.value?.columns ?? []),
 );
 
-/** 为预览数据生成稳定的前端行键。 */
+/** 为预览数据生成稳定的前端行键。 Create stable presentation keys for preview rows. */
 const previewRows = computed(() =>
   withRowKeys(previewResult.value?.rows ?? []),
 );
 
-/** 为查询结果生成稳定的前端行键。 */
+/** 为查询结果生成稳定的前端行键。 Create stable presentation keys for query rows. */
 const queryRows = computed(() => withRowKeys(queryResult.value?.rows ?? []));
 
-/** 将字段结构转换为可展示的数据行。 */
+/** 将字段结构转换为可展示的数据行。 Convert field metadata to presentation rows. */
 const columnRows = computed(() =>
   columns.value.map((column) => ({
     ...column,
@@ -141,7 +148,7 @@ const fieldTableColumns = [
 
 const limitOptions = [100, 200, 500];
 
-/** 将后端查询列转换为 Ant Design Table 列定义。 */
+/** 将后端查询列转换为 Ant Design Table 列定义。 Convert backend query columns to table definitions. */
 function toAntColumns(resultColumns: QueryResultColumn[]) {
   return resultColumns.map((column) => ({
     title: column.label,
@@ -152,12 +159,12 @@ function toAntColumns(resultColumns: QueryResultColumn[]) {
   }));
 }
 
-/** 为查询结果增加仅供前端表格使用的稳定行键。 */
+/** 为查询结果增加仅供前端表格使用的稳定行键。 Attach stable table keys without changing persisted records. */
 function withRowKeys(rows: Array<Record<string, unknown>>) {
   return rows.map((row, index) => ({ ...row, __rowKey: index }));
 }
 
-/** 载入数据源并自动进入第一个可用数据源。 */
+/** 载入数据源并自动进入第一个可用数据源。 Load sources and select the first available source. */
 async function loadSources() {
   catalogLoading.value = true;
   try {
@@ -173,49 +180,67 @@ async function loadSources() {
   }
 }
 
-/** 切换数据源并重置下游数据库、表和查询状态。 */
+/** 切换数据源并重置下游数据库、表和查询状态。 Switch source and invalidate stale namespace, table and query results. */
 async function handleSourceChange(value?: unknown) {
   const sourceId = typeof value === 'number' ? value : undefined;
+  const generation = ++sourceGeneration;
+  namespaceGeneration++;
+  tableGeneration++;
   selectedSourceId.value = sourceId;
   resetNamespaceState();
   if (!sourceId) return;
   catalogLoading.value = true;
   try {
-    namespaces.value = await getBrowserNamespaces(sourceId);
+    const result = await getBrowserNamespaces(sourceId);
+    if (generation !== sourceGeneration) return;
+    namespaces.value = result;
     selectedNamespace.value = namespaces.value[0]?.name;
     if (selectedNamespace.value) {
       await handleNamespaceChange(selectedNamespace.value);
     }
   } catch (error: any) {
-    message.error(error?.message || '获取数据库目录失败');
+    if (generation === sourceGeneration)
+      message.error(error?.message || '获取数据库目录失败');
   } finally {
-    catalogLoading.value = false;
+    if (generation === sourceGeneration) catalogLoading.value = false;
   }
 }
 
-/** 切换数据库或 Schema 并加载对应表目录。 */
+/** 切换数据库或 Schema 并加载对应表目录。 Switch namespace and load its current table catalog. */
 async function handleNamespaceChange(value?: unknown) {
   const namespace = typeof value === 'string' ? value : undefined;
+  const generation = ++namespaceGeneration;
+  tableGeneration++;
   selectedNamespace.value = namespace;
   resetTableState();
   if (!selectedSourceId.value || !namespace) return;
   tableLoading.value = true;
   try {
-    tables.value = await getBrowserTables(selectedSourceId.value, namespace);
+    const result = await getBrowserTables(selectedSourceId.value, namespace);
+    if (generation !== namespaceGeneration) return;
+    tables.value = result;
     if (tables.value.length > 0) {
       await handleTableSelect(tables.value[0] as BrowserTable);
     }
   } catch (error: any) {
-    message.error(error?.message || '获取表目录失败');
+    if (generation === namespaceGeneration)
+      message.error(error?.message || '获取表目录失败');
   } finally {
-    tableLoading.value = false;
+    if (generation === namespaceGeneration) tableLoading.value = false;
   }
 }
 
-/** 选择表后并行加载字段结构与数据预览。 */
+/** 选择表后并行加载字段结构与数据预览。 Load the selected table fields and preview together while rejecting stale results. */
 async function handleTableSelect(table: BrowserTable) {
   if (!selectedSourceId.value || !selectedNamespace.value) return;
+  const generation = ++tableGeneration;
+  queryGeneration++;
+  queryLoading.value = false;
+  queryResult.value = undefined;
+  queryError.value = '';
   selectedTable.value = table.name;
+  columns.value = [];
+  previewResult.value = undefined;
   activeOutput.value = 'preview';
   tableLoading.value = true;
   try {
@@ -231,25 +256,29 @@ async function handleTableSelect(table: BrowserTable) {
         table.name,
       ),
     ]);
+    if (generation !== tableGeneration) return;
     columns.value = columnResult;
     previewResult.value = previewResultValue;
-    sqlContent.value = defaultTableQuery(table.name);
+    if (!sqlEdited.value) sqlContent.value = defaultTableQuery(table.name);
     queryResult.value = undefined;
     queryError.value = '';
   } catch (error: any) {
-    message.error(error?.message || '加载表数据失败');
+    if (generation === tableGeneration)
+      message.error(error?.message || '加载表数据失败');
   } finally {
-    tableLoading.value = false;
+    if (generation === tableGeneration) tableLoading.value = false;
   }
 }
 
-/** 重新加载当前数据库或 Schema 的表目录。 */
+/** 重新加载当前数据库或 Schema 的表目录。 Reload the current namespace table catalog. */
 async function refreshCatalog() {
   await handleNamespaceChange(selectedNamespace.value);
 }
 
-/** 执行只读查询并切换到查询结果视图。 */
+/** 执行只读查询并切换到查询结果视图。 Execute a read-only query and display only results belonging to the current selection. */
 async function handleExecute() {
+  if (queryLoading.value) return;
+  const generation = ++queryGeneration;
   if (!selectedSourceId.value || !selectedNamespace.value) {
     message.warning('请选择数据源和数据库');
     return;
@@ -261,28 +290,37 @@ async function handleExecute() {
   queryLoading.value = true;
   queryError.value = '';
   try {
-    queryResult.value = await executeBrowserQuery(selectedSourceId.value, {
+    const result = await executeBrowserQuery(selectedSourceId.value, {
       namespace: selectedNamespace.value,
       sql: sqlContent.value,
       limit: queryLimit.value,
     });
+    if (generation !== queryGeneration) return;
+    queryResult.value = result;
   } catch (error: any) {
-    queryResult.value = undefined;
-    queryError.value = error?.message || '查询失败';
+    if (generation === queryGeneration) {
+      queryResult.value = undefined;
+      queryError.value = error?.message || '查询失败';
+    }
   } finally {
-    queryLoading.value = false;
+    if (generation === queryGeneration) queryLoading.value = false;
   }
 }
 
-/** 清空 SQL、查询结果和错误状态。 */
+/** 清空 SQL、查询结果和错误状态。 Confirm and clear the SQL draft, query results and errors. */
 function clearQuery() {
+  if (sqlEdited.value && !window.confirm('清空当前SQL草稿？')) return;
+  queryGeneration++;
+  queryLoading.value = false;
+  sqlEdited.value = false;
+  pageState().dirty = false;
   sqlContent.value = '';
   queryResult.value = undefined;
   queryError.value = '';
   activeOutput.value = 'query';
 }
 
-/** 根据数据库类型生成带安全标识符引号的表查询。 */
+/** 根据数据库类型生成带安全标识符引号的表查询。 Generate a table query with dialect-specific identifier quoting. */
 function defaultTableQuery(tableName: string) {
   if (selectedSource.value?.type === 'MYSQL') {
     return `SELECT * FROM \`${tableName}\` LIMIT 100;`;
@@ -290,15 +328,17 @@ function defaultTableQuery(tableName: string) {
   return `SELECT * FROM "${selectedNamespace.value}"."${tableName}" LIMIT 100;`;
 }
 
-/** 重置数据库选择及全部下游展示状态。 */
+/** 重置数据库选择及全部下游展示状态。 Reset the namespace and all dependent presentation state. */
 function resetNamespaceState() {
   namespaces.value = [];
   selectedNamespace.value = undefined;
   resetTableState();
 }
 
-/** 重置表、字段、预览和查询结果状态。 */
+/** 重置表、字段、预览和查询结果状态。 Invalidate query results and reset table, field and preview state. */
 function resetTableState() {
+  queryGeneration++;
+  queryLoading.value = false;
   tables.value = [];
   columns.value = [];
   selectedTable.value = undefined;
@@ -313,245 +353,252 @@ onMounted(loadSources);
 </script>
 
 <template>
-  <div class="sql-workbench-page" :style="workbenchStyle">
-    <header class="workbench-header">
-      <div class="workbench-title">
-        <CodeOutlined />
-        <h1>SQL 工作台</h1>
-        <Tag color="green">只读</Tag>
-      </div>
+  <DataPage
+    title="SQL 工作台"
+    description="浏览数据对象，编写只读查询并检查字段与结果。"
+    ><div class="sql-workbench-page" :style="workbenchStyle">
+      <header class="workbench-header">
+        <div class="workbench-title">
+          <CodeOutlined />
+          <h1>SQL 工作台</h1>
+          <Tag color="processing">只读</Tag>
+        </div>
 
-      <div class="context-controls">
-        <Select
-          v-model:value="selectedSourceId"
-          class="source-select"
-          :loading="catalogLoading"
-          placeholder="数据源"
-          size="small"
-          @change="handleSourceChange"
-        >
-          <SelectOption
-            v-for="source in sources"
-            :key="source.id"
-            :value="source.id"
+        <div class="context-controls">
+          <Select
+            v-model:value="selectedSourceId"
+            class="source-select"
+            :loading="catalogLoading"
+            placeholder="数据源"
+            size="small"
+            @change="handleSourceChange"
           >
-            {{ source.name }} / {{ source.type }}
-          </SelectOption>
-        </Select>
-        <Select
-          v-model:value="selectedNamespace"
-          class="namespace-select"
-          :disabled="!selectedSourceId"
-          :loading="catalogLoading"
-          placeholder="数据库 / Schema"
-          size="small"
-          @change="handleNamespaceChange"
-        >
-          <SelectOption
-            v-for="namespace in namespaces"
-            :key="namespace.name"
-            :value="namespace.name"
+            <SelectOption
+              v-for="source in sources"
+              :key="source.id"
+              :value="source.id"
+            >
+              {{ source.name }} / {{ source.type }}
+            </SelectOption>
+          </Select>
+          <Select
+            v-model:value="selectedNamespace"
+            class="namespace-select"
+            :disabled="!selectedSourceId"
+            :loading="catalogLoading"
+            placeholder="数据库 / Schema"
+            size="small"
+            @change="handleNamespaceChange"
           >
-            {{ namespace.displayName }}
-          </SelectOption>
-        </Select>
-        <span class="catalog-count">{{ tables.length }} 表</span>
-        <Tooltip title="刷新">
-          <Button
-            :disabled="!selectedNamespace"
-            :loading="tableLoading"
-            type="text"
-            @click="refreshCatalog"
-          >
-            <template #icon><ReloadOutlined /></template>
-          </Button>
-        </Tooltip>
-      </div>
-    </header>
+            <SelectOption
+              v-for="namespace in namespaces"
+              :key="namespace.name"
+              :value="namespace.name"
+            >
+              {{ namespace.displayName }}
+            </SelectOption>
+          </Select>
+          <span class="catalog-count">{{ tables.length }} 表</span>
+          <Tooltip title="刷新">
+            <Button
+              :disabled="!selectedNamespace"
+              :loading="tableLoading"
+              type="text"
+              @click="refreshCatalog"
+            >
+              <template #icon><ReloadOutlined /></template>
+            </Button>
+          </Tooltip>
+        </div>
+      </header>
 
-    <Spin :spinning="catalogLoading">
-      <div class="workbench-shell">
-        <aside class="object-pane">
-          <div class="pane-toolbar object-toolbar">
-            <span class="pane-title"><DatabaseOutlined /> 数据对象</span>
-            <span class="pane-count">{{ filteredTables.length }}</span>
-          </div>
-          <div class="object-filter">
-            <Input
-              v-model:value="tableSearch"
-              allow-clear
-              placeholder="搜索表"
-              size="small"
-            >
-              <template #prefix><SearchOutlined /></template>
-            </Input>
-          </div>
-          <div class="object-list" aria-label="数据表列表">
-            <button
-              v-for="table in filteredTables"
-              :key="table.qualifiedName"
-              class="object-row"
-              :class="[{ active: selectedTable === table.name }]"
-              type="button"
-              @click="handleTableSelect(table)"
-            >
-              <TableOutlined />
-              <span class="object-name">{{ table.name }}</span>
-              <span class="object-type">{{ table.type }}</span>
-            </button>
-            <div v-if="filteredTables.length === 0" class="empty-pane">
-              <Empty
-                :description="false"
-                :image="Empty.PRESENTED_IMAGE_SIMPLE"
-              />
+      <Spin :spinning="catalogLoading">
+        <div class="workbench-shell">
+          <aside class="object-pane">
+            <div class="pane-toolbar object-toolbar">
+              <span class="pane-title"><DatabaseOutlined /> 数据对象</span>
+              <span class="pane-count">{{ filteredTables.length }}</span>
             </div>
-          </div>
-        </aside>
-
-        <main class="main-pane">
-          <section class="editor-pane">
-            <div class="pane-toolbar editor-toolbar">
-              <div class="editor-object" :title="selectedObjectName">
-                <TableOutlined v-if="selectedTable" />
-                <CodeOutlined v-else />
-                <span>{{ selectedObjectName }}</span>
+            <div class="object-filter">
+              <Input
+                v-model:value="tableSearch"
+                allow-clear
+                placeholder="搜索表"
+                size="small"
+              >
+                <template #prefix><SearchOutlined /></template>
+              </Input>
+            </div>
+            <div class="object-list" aria-label="数据表列表">
+              <button
+                v-for="table in filteredTables"
+                :key="table.qualifiedName"
+                class="object-row"
+                :class="[{ active: selectedTable === table.name }]"
+                type="button"
+                @click="handleTableSelect(table)"
+              >
+                <TableOutlined />
+                <span class="object-name">{{ table.name }}</span>
+                <span class="object-type">{{ table.type }}</span>
+              </button>
+              <div v-if="filteredTables.length === 0" class="empty-pane">
+                <Empty
+                  :description="false"
+                  :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                />
               </div>
-              <div class="editor-actions">
-                <Tooltip title="结果行数上限">
-                  <Select
-                    v-model:value="queryLimit"
-                    class="limit-select"
-                    size="small"
-                  >
-                    <SelectOption
-                      v-for="limit in limitOptions"
-                      :key="limit"
-                      :value="limit"
+            </div>
+          </aside>
+
+          <main class="main-pane">
+            <section class="editor-pane">
+              <div class="pane-toolbar editor-toolbar">
+                <div class="editor-object" :title="selectedObjectName">
+                  <TableOutlined v-if="selectedTable" />
+                  <CodeOutlined v-else />
+                  <span>{{ selectedObjectName }}</span>
+                </div>
+                <div class="editor-actions">
+                  <Tooltip title="结果行数上限">
+                    <Select
+                      v-model:value="queryLimit"
+                      class="limit-select"
+                      size="small"
                     >
-                      {{ limit }} 行
-                    </SelectOption>
-                  </Select>
-                </Tooltip>
-                <Tooltip title="清空">
-                  <Button type="text" @click="clearQuery">
-                    <template #icon><ClearOutlined /></template>
+                      <SelectOption
+                        v-for="limit in limitOptions"
+                        :key="limit"
+                        :value="limit"
+                      >
+                        {{ limit }} 行
+                      </SelectOption>
+                    </Select>
+                  </Tooltip>
+                  <Tooltip title="清空">
+                    <Button type="text" @click="clearQuery">
+                      <template #icon><ClearOutlined /></template>
+                    </Button>
+                  </Tooltip>
+                  <Button
+                    type="primary"
+                    :disabled="
+                      !selectedSourceId ||
+                      !selectedNamespace ||
+                      !sqlContent.trim()
+                    "
+                    :loading="queryLoading"
+                    @click="handleExecute"
+                  >
+                    <template #icon><PlayCircleOutlined /></template>
+                    执行
                   </Button>
-                </Tooltip>
-                <Button
-                  type="primary"
-                  :disabled="
-                    !selectedSourceId ||
-                    !selectedNamespace ||
-                    !sqlContent.trim()
-                  "
-                  :loading="queryLoading"
-                  @click="handleExecute"
-                >
-                  <template #icon><PlayCircleOutlined /></template>
-                  执行
-                </Button>
+                </div>
               </div>
-            </div>
-            <Textarea
-              v-model:value="sqlContent"
-              class="sql-editor"
-              spellcheck="false"
-              @keydown.ctrl.enter.prevent="handleExecute"
-            />
-            <div v-if="queryError" class="query-error" role="alert">
-              {{ queryError }}
-            </div>
-          </section>
+              <Textarea
+                v-model:value="sqlContent"
+                class="sql-editor"
+                @input="
+                  sqlEdited = true;
+                  pageState().dirty = true;
+                "
+                spellcheck="false"
+                @keydown.ctrl.enter.prevent="handleExecute"
+              />
+              <div v-if="queryError" class="query-error" role="alert">
+                {{ queryError }}
+              </div>
+            </section>
 
-          <section class="output-pane">
-            <Tabs
-              v-model:active-key="activeOutput"
-              :animated="false"
-              class="output-tabs"
-            >
-              <TabPane key="query" tab="查询结果">
-                <div class="output-view">
-                  <div v-if="queryResult" class="output-meta">
-                    <span>{{ queryResult.rowCount }} 行</span>
-                    <span>{{ queryResult.durationMs }} ms</span>
-                    <Tag v-if="queryResult.truncated" color="orange">
-                      已截断
-                    </Tag>
-                  </div>
-                  <Table
-                    v-if="queryResult?.columns.length"
-                    :columns="queryTableColumns"
-                    :data-source="queryRows"
-                    :pagination="false"
-                    :scroll="{ x: 'max-content', y: 260 }"
-                    row-key="__rowKey"
-                    size="small"
-                  />
-                  <div v-else class="empty-pane output-empty">
-                    <Empty
-                      :description="false"
-                      :image="Empty.PRESENTED_IMAGE_SIMPLE"
+            <section class="output-pane">
+              <Tabs
+                v-model:active-key="activeOutput"
+                :animated="false"
+                class="output-tabs"
+              >
+                <TabPane key="query" tab="查询结果">
+                  <div class="output-view">
+                    <div v-if="queryResult" class="output-meta">
+                      <span>{{ queryResult.rowCount }} 行</span>
+                      <span>{{ queryResult.durationMs }} ms</span>
+                      <Tag v-if="queryResult.truncated" color="orange">
+                        已截断
+                      </Tag>
+                    </div>
+                    <Table
+                      v-if="queryResult?.columns.length"
+                      :columns="queryTableColumns"
+                      :data-source="queryRows"
+                      :pagination="false"
+                      :scroll="{ x: 'max-content', y: 260 }"
+                      row-key="__rowKey"
+                      size="small"
                     />
+                    <div v-else class="empty-pane output-empty">
+                      <Empty
+                        :description="false"
+                        :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                      />
+                    </div>
                   </div>
-                </div>
-              </TabPane>
+                </TabPane>
 
-              <TabPane key="preview" tab="数据预览">
-                <div class="output-view">
-                  <div v-if="previewResult" class="output-meta">
-                    <span>{{ previewResult.rowCount }} 行</span>
-                    <span>{{ previewResult.durationMs }} ms</span>
-                    <Tag v-if="previewResult.truncated" color="orange">
-                      已截断
-                    </Tag>
-                  </div>
-                  <Table
-                    v-if="previewResult?.columns.length"
-                    :columns="previewTableColumns"
-                    :data-source="previewRows"
-                    :loading="tableLoading"
-                    :pagination="false"
-                    :scroll="{ x: 'max-content', y: 260 }"
-                    row-key="__rowKey"
-                    size="small"
-                  />
-                  <div v-else class="empty-pane output-empty">
-                    <Empty
-                      :description="false"
-                      :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                <TabPane key="preview" tab="数据预览">
+                  <div class="output-view">
+                    <div v-if="previewResult" class="output-meta">
+                      <span>{{ previewResult.rowCount }} 行</span>
+                      <span>{{ previewResult.durationMs }} ms</span>
+                      <Tag v-if="previewResult.truncated" color="orange">
+                        已截断
+                      </Tag>
+                    </div>
+                    <Table
+                      v-if="previewResult?.columns.length"
+                      :columns="previewTableColumns"
+                      :data-source="previewRows"
+                      :loading="tableLoading"
+                      :pagination="false"
+                      :scroll="{ x: 'max-content', y: 260 }"
+                      row-key="__rowKey"
+                      size="small"
                     />
+                    <div v-else class="empty-pane output-empty">
+                      <Empty
+                        :description="false"
+                        :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                      />
+                    </div>
                   </div>
-                </div>
-              </TabPane>
+                </TabPane>
 
-              <TabPane key="columns" tab="字段结构">
-                <div class="output-view">
-                  <div class="output-meta">
-                    <span>{{ columns.length }} 字段</span>
-                  </div>
-                  <Table
-                    v-if="columns.length > 0"
-                    :columns="fieldTableColumns"
-                    :data-source="columnRows"
-                    :pagination="false"
-                    :scroll="{ x: 720, y: 260 }"
-                    row-key="name"
-                    size="small"
-                  />
-                  <div v-else class="empty-pane output-empty">
-                    <Empty
-                      :description="false"
-                      :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                <TabPane key="columns" tab="字段结构">
+                  <div class="output-view">
+                    <div class="output-meta">
+                      <span>{{ columns.length }} 字段</span>
+                    </div>
+                    <Table
+                      v-if="columns.length > 0"
+                      :columns="fieldTableColumns"
+                      :data-source="columnRows"
+                      :pagination="false"
+                      :scroll="{ x: 720, y: 260 }"
+                      row-key="name"
+                      size="small"
                     />
+                    <div v-else class="empty-pane output-empty">
+                      <Empty
+                        :description="false"
+                        :image="Empty.PRESENTED_IMAGE_SIMPLE"
+                      />
+                    </div>
                   </div>
-                </div>
-              </TabPane>
-            </Tabs>
-          </section>
-        </main>
-      </div>
-    </Spin>
-  </div>
+                </TabPane>
+              </Tabs>
+            </section>
+          </main>
+        </div>
+      </Spin></div
+  ></DataPage>
 </template>
 
 <style scoped>
@@ -897,7 +944,7 @@ onMounted(loadSources);
   }
 
   .output-view {
-    padding-right: 48px;
+    padding-right: 0;
   }
 }
 

@@ -170,12 +170,13 @@ function handleOrganizationChange(value: unknown) {
     <slot name="menu"></slot>
   </div>
   <span
-    class="mr-2 whitespace-nowrap font-medium text-gray-700 dark:text-gray-200"
+    class="organization-label text-muted-foreground mr-2 whitespace-nowrap text-xs"
   >
-    请选择：租户/部门/团队
+    组织范围
   </span>
-  <div class="flex h-full min-w-0 flex-shrink-0 items-center">
+  <div class="organization-tools flex h-full min-w-0 items-center">
     <Cascader
+      class="organization-picker"
       :value="props.selectedOrgPath"
       :options="props.treeData"
       placeholder="请选择租户/部门/团队"
@@ -213,6 +214,37 @@ function handleOrganizationChange(value: unknown) {
   </div>
 </template>
 <style lang="scss" scoped>
+.organization-picker {
+  width: 260px;
+  min-width: 0;
+  margin-right: 12px;
+}
+.organization-tools {
+  flex-shrink: 1;
+}
+@media (max-width: 768px) {
+  .organization-label {
+    display: none;
+  }
+  .organization-picker {
+    width: 180px;
+    margin-right: 4px;
+  }
+  .organization-tools {
+    max-width: calc(100vw - 70px);
+  }
+}
+@media (max-width: 480px) {
+  .organization-picker {
+    width: 130px;
+  }
+  .organization-tools :deep(.mr-1) {
+    margin-right: 0;
+  }
+  .organization-tools {
+    gap: 0;
+  }
+}
 .menu-align-start {
   --menu-align: start;
 }

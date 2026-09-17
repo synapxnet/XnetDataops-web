@@ -4,9 +4,13 @@
  * 可拖拽的悬浮窗口，点击展开聊天界面
  * 通过后端 SSE 代理与 Gateway 通信（避免 CORS 问题）
  */
-import type { Assistant, AssistantConversation, AssistantMessage } from '#/views/XAA/api/types';
+import type {
+  Assistant,
+  AssistantConversation,
+  AssistantMessage,
+} from '#/views/XAA/api/types';
 
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref } from 'vue';
 
 import {
   CloseOutlined,
@@ -128,8 +132,8 @@ const floatingStyle = computed(() => {
   }
 
   const config = uiConfig.value;
-  const width = expanded.value ? (config?.size?.width || 380) : 60;
-  const height = expanded.value ? (config?.size?.height || 500) : 60;
+  const width = expanded.value ? config?.size?.width || 380 : 60;
+  const height = expanded.value ? config?.size?.height || 500 : 60;
   const pos = expanded.value ? expandedPos : position;
 
   return {
@@ -198,7 +202,11 @@ const createNewConversation = async () => {
   if (!assistant.value) return;
 
   try {
-    const conv = await createConversation(assistant.value.id, 'floating-user', 'User');
+    const conv = await createConversation(
+      assistant.value.id,
+      'floating-user',
+      'User',
+    );
     currentConversation.value = conv;
     messages.value = [];
   } catch (error) {
@@ -214,6 +222,7 @@ const sendMessage = async () => {
     await createNewConversation();
   }
 
+  if (!currentConversation.value) return;
   const content = inputMessage.value.trim();
   inputMessage.value = '';
   sending.value = true;
@@ -242,25 +251,28 @@ const sendMessage = async () => {
 };
 
 // SSE 流式请求（复用 chat.vue 的模式）
-const sendToGateway = async (userContent: string) => {
+const sendToGateway = async (_userContent: string) => {
   const chatMessages = messages.value.slice(-20).map((msg) => ({
     role: msg.role as 'user' | 'assistant' | 'system',
     content: msg.content,
   }));
 
   try {
-    const response = await fetch(`/xaa/assistants/${assistant.value!.id}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/xaa/assistants/${assistant.value!.id}/chat/completions`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'openclaw',
+          messages: chatMessages,
+          stream: true,
+          user: currentConversation.value?.uid || 'default',
+        }),
       },
-      body: JSON.stringify({
-        model: 'openclaw',
-        messages: chatMessages,
-        stream: true,
-        user: currentConversation.value?.uid || 'default',
-      }),
-    });
+    );
 
     if (!response.ok) {
       const errText = await response.text();
@@ -352,7 +364,8 @@ const saveAssistantMessage = async (content: string) => {
 const scrollToBottom = () => {
   nextTick(() => {
     if (messageContainerRef.value) {
-      messageContainerRef.value.scrollTop = messageContainerRef.value.scrollHeight;
+      messageContainerRef.value.scrollTop =
+        messageContainerRef.value.scrollHeight;
     }
   });
 };
@@ -387,7 +400,10 @@ const onDrag = (e: MouseEvent) => {
   dragging.value = true;
 
   position.x = Math.max(0, Math.min(window.innerWidth - 60, initialX + deltaX));
-  position.y = Math.max(0, Math.min(window.innerHeight - 60, initialY + deltaY));
+  position.y = Math.max(
+    0,
+    Math.min(window.innerHeight - 60, initialY + deltaY),
+  );
 };
 
 const stopDrag = () => {
@@ -412,7 +428,10 @@ const handleKeydown = (e: KeyboardEvent) => {
 // 格式化时间
 const formatTime = (dateStr: string) => {
   const date = new Date(dateStr);
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 // 切换全屏
@@ -460,13 +479,14 @@ onMounted(() => {
         @mousedown="startDrag"
         @click="handleIconClick"
       >
-        <Spin v-if="loading" :indicator="h(LoadingOutlined, { style: { fontSize: '24px', color: '#fff' } })" />
+        <Spin
+          v-if="loading"
+          :indicator="
+            h(LoadingOutlined, { style: { fontSize: '24px', color: '#fff' } })
+          "
+        />
         <Badge v-else :dot="connected" :offset="[-5, 5]" status="success">
-          <Avatar
-            v-if="assistant?.avatar"
-            :size="48"
-            :src="assistant.avatar"
-          />
+          <Avatar v-if="assistant?.avatar" :size="48" :src="assistant.avatar" />
           <RobotOutlined v-else class="text-2xl text-white" />
         </Badge>
       </div>
@@ -474,16 +494,9 @@ onMounted(() => {
       <!-- 展开状态：聊天窗口 -->
       <div v-else class="chat-window">
         <!-- 头部 -->
-        <div
-          class="chat-header"
-          :style="{ backgroundColor: primaryColor }"
-        >
+        <div class="chat-header" :style="{ backgroundColor: primaryColor }">
           <div class="flex items-center gap-2">
-            <Avatar
-              :size="32"
-              :src="assistant?.avatar"
-              class="bg-white/20"
-            >
+            <Avatar :size="32" :src="assistant?.avatar" class="bg-white/20">
               {{ assistant?.name?.charAt(0) }}
             </Avatar>
             <div>
@@ -497,18 +510,33 @@ onMounted(() => {
           </div>
           <div class="flex items-center gap-1">
             <Tooltip title="最小化">
-              <Button type="text" size="small" class="text-white" @click="minimize">
+              <Button
+                type="text"
+                size="small"
+                class="text-white"
+                @click="minimize"
+              >
                 <MinusOutlined />
               </Button>
             </Tooltip>
             <Tooltip :title="fullscreen ? '退出全屏' : '全屏'">
-              <Button type="text" size="small" class="text-white" @click="toggleFullscreen">
+              <Button
+                type="text"
+                size="small"
+                class="text-white"
+                @click="toggleFullscreen"
+              >
                 <FullscreenExitOutlined v-if="fullscreen" />
                 <FullscreenOutlined v-else />
               </Button>
             </Tooltip>
             <Tooltip title="收起">
-              <Button type="text" size="small" class="text-white" @click="toggleExpand">
+              <Button
+                type="text"
+                size="small"
+                class="text-white"
+                @click="close"
+              >
                 <CloseOutlined />
               </Button>
             </Tooltip>
@@ -518,16 +546,29 @@ onMounted(() => {
         <!-- 消息区域 -->
         <div ref="messageContainerRef" class="chat-messages">
           <!-- 欢迎消息 -->
-          <div v-if="messages.length === 0 && !assistant" class="welcome-message">
+          <div
+            v-if="messages.length === 0 && !assistant"
+            class="welcome-message"
+          >
             <RobotOutlined class="empty-assistant-icon" />
-            <p class="text-muted-foreground mt-2">未找到默认助手，请先在智能助手页面设置一个默认助手</p>
+            <p class="text-muted-foreground mt-2">
+              当前 DataOps 尚未接入独立智能助手服务，请在 OpenXnet
+              工作空间使用对话能力
+            </p>
           </div>
           <div v-else-if="messages.length === 0" class="welcome-message">
-            <Avatar :size="48" class="mb-2" :style="{ backgroundColor: primaryColor }">
+            <Avatar
+              :size="48"
+              class="mb-2"
+              :style="{ backgroundColor: primaryColor }"
+            >
               <RobotOutlined />
             </Avatar>
             <p class="text-muted-foreground">
-              {{ assistant?.welcomeMessage || '你好！我是你的AI助手，有什么可以帮助你的吗？' }}
+              {{
+                assistant?.welcomeMessage ||
+                '你好！我是你的AI助手，有什么可以帮助你的吗？'
+              }}
             </p>
           </div>
 
@@ -541,14 +582,18 @@ onMounted(() => {
             <Avatar
               :size="28"
               :class="msg.role === 'user' ? 'bg-green-500' : ''"
-              :style="msg.role !== 'user' ? { backgroundColor: primaryColor } : {}"
+              :style="
+                msg.role !== 'user' ? { backgroundColor: primaryColor } : {}
+              "
             >
               <UserOutlined v-if="msg.role === 'user'" />
               <RobotOutlined v-else />
             </Avatar>
             <div
               class="message-content"
-              :style="msg.role === 'user' ? { backgroundColor: primaryColor } : {}"
+              :style="
+                msg.role === 'user' ? { backgroundColor: primaryColor } : {}
+              "
             >
               {{ msg.content }}
               <div class="message-time">{{ formatTime(msg.createdAt) }}</div>
@@ -562,9 +607,7 @@ onMounted(() => {
             </Avatar>
             <div class="message-content">
               {{ streamingContent }}
-              <div class="message-time">
-                <LoadingOutlined /> 输入中...
-              </div>
+              <div class="message-time"><LoadingOutlined /> 输入中...</div>
             </div>
           </div>
 
@@ -573,9 +616,7 @@ onMounted(() => {
             <Avatar :size="28" :style="{ backgroundColor: primaryColor }">
               <RobotOutlined />
             </Avatar>
-            <div class="message-content">
-              <LoadingOutlined /> 思考中...
-            </div>
+            <div class="message-content"><LoadingOutlined /> 思考中...</div>
           </div>
         </div>
 
@@ -590,7 +631,10 @@ onMounted(() => {
           />
           <Button
             type="primary"
-            :style="{ backgroundColor: primaryColor, borderColor: primaryColor }"
+            :style="{
+              backgroundColor: primaryColor,
+              borderColor: primaryColor,
+            }"
             :loading="sending"
             :disabled="!inputMessage.trim() || !assistant"
             @click="sendMessage"
@@ -612,7 +656,8 @@ export default {
 
 <style scoped>
 .assistant-floating-window {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   transition: all 0.3s ease;
 }
 
@@ -630,7 +675,9 @@ export default {
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .floating-icon:hover {
