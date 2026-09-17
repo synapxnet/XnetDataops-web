@@ -13,9 +13,9 @@ Maintainer: maoyo
 
 Web console for DataOps governance, DAG editing, evidence and resident Agent interaction.
 
-**[Pinned v1.3.0 source](https://github.com/synapxnet/XnetDataops-web/tree/v1.3.0) · [Release/downloads](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [Matching backend](https://github.com/synapxnet/XnetDataops/tree/v1.3.0) · [OpenXnet installer](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
+**[Pinned v1.3.0 source](https://github.com/synapxnet/XnetDataops-web/tree/v1.3.0) · [Release](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [Source ZIP](https://github.com/synapxnet/XnetDataops-web/releases/download/v1.3.0/XnetDataops-web-v1.3.0-source.zip) · [Matching backend](https://github.com/synapxnet/XnetDataops/tree/v1.3.0) · [OpenXnet installer](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
 
-This default `display` branch retains historical showcase code. The GOAI release badge links to a separate release: clone the pinned tag below to reproduce it. README-only changes do not move that tag, replace source archives or redeploy services.
+This default `display` branch retains historical showcase code. The GOAI release badge links to a separate release: clone the pinned tag below to reproduce it. Use the matching v1.3.0 Source ZIP for the same release documentation. Updating release documentation does not redeploy services.
 
 ## Current demo and sign-in
 
@@ -44,7 +44,7 @@ The [resident service](https://github.com/synapxnet/OpenXnet/tree/v1.3.0/service
 
 The console includes governance, lineage/quality evidence, DAG validation, resident chat/tasks/configuration and unified login/themes/skin import/export. Internal dependency and Vite production builds passed; 47/47 targeted tests passed. Full type checking and every online business flow were not accepted as complete. Browserslist age and large-chunk warnings remain.
 
-See the [pinned source delivery guide](https://github.com/synapxnet/XnetDataops-web/blob/v1.3.0/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md). Source release, documentation changes and read-only checks do not prove all deployed components match one source commit.
+See the [pinned source delivery guide](https://github.com/synapxnet/XnetDataops-web/blob/v1.3.0/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md). Source release, documentation changes and read-only checks do not prove all deployed components match one source commit. Build/test results refer to the [program verification baseline d5c66e45](https://github.com/synapxnet/XnetDataops-web/commit/d5c66e45f76732badfe3dd1c1c5ebb12b6be844d); subsequent release alignment changes README files only, retaining the same program files.
 
 ## Build the pinned version
 

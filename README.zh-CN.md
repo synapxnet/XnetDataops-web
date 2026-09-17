@@ -13,7 +13,7 @@ Maintainer: maoyo
 
 数据工程与治理平台的 Web 控制台，提供治理工作台、DAG 编辑、证据浏览和驻场 Agent 交互。
 
-**[v1.3.0 固定源码](https://github.com/synapxnet/XnetDataops-web/tree/v1.3.0) · [发布与下载](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [配套后端 v1.3.0](https://github.com/synapxnet/XnetDataops/tree/v1.3.0) · [OpenXnet 安装包](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
+**[v1.3.0 固定源码](https://github.com/synapxnet/XnetDataops-web/tree/v1.3.0) · [发布页](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [源码 ZIP](https://github.com/synapxnet/XnetDataops-web/releases/download/v1.3.0/XnetDataops-web-v1.3.0-source.zip) · [配套后端 v1.3.0](https://github.com/synapxnet/XnetDataops/tree/v1.3.0) · [OpenXnet 安装包](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
 
 当前默认 `display` 分支保留历史展示代码。上方 GOAI release 徽章指向独立的决赛版本；要复现本说明，请获取 `v1.3.0`，不要将默认分支直接当作决赛代码。
 
@@ -53,7 +53,7 @@ Maintainer: maoyo
 - 统一品牌登录、深浅主题和皮肤导入导出，保留各业务模块入口与请求失败状态。
 - 前端内部依赖与 Vite 生产构建通过，七组定向测试 **47/47 通过**。全量类型检查和所有页面线上业务验收未列为通过；构建仍有 Browserslist 数据陈旧及大分块提示。
 
-完整来源、测试和限制见 [v1.3.0 源码交付说明](https://github.com/synapxnet/XnetDataops-web/blob/v1.3.0/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md)。源码发布、README 更新和本次只读接入核验都不意味着线上所有组件已重新部署到同一个源码提交。
+完整来源、测试和限制见 [v1.3.0 源码交付说明](https://github.com/synapxnet/XnetDataops-web/blob/v1.3.0/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md)。源码发布、README 更新和本次只读接入核验都不意味着线上所有组件已重新部署到同一个源码提交。 构建与测试对应[程序验证基线 d5c66e45](https://github.com/synapxnet/XnetDataops-web/commit/d5c66e45f76732badfe3dd1c1c5ebb12b6be844d)；之后的发布对齐只更新 README，程序文件与该基线一致。
 
 ## 固定版本构建
 

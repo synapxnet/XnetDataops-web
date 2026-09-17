@@ -13,9 +13,9 @@ Maintainer: maoyo
 
 データガバナンス、DAG 編集、証拠表示、常駐 Agent 操作の Web コンソールです。
 
-**[v1.3.0 固定ソース](https://github.com/synapxnet/XnetDataops-web/tree/v1.3.0) · [リリースとダウンロード](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [対応バックエンド](https://github.com/synapxnet/XnetDataops/tree/v1.3.0) · [OpenXnet インストーラー](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
+**[v1.3.0 固定ソース](https://github.com/synapxnet/XnetDataops-web/tree/v1.3.0) · [リリース](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [ソース ZIP](https://github.com/synapxnet/XnetDataops-web/releases/download/v1.3.0/XnetDataops-web-v1.3.0-source.zip) · [対応バックエンド](https://github.com/synapxnet/XnetDataops/tree/v1.3.0) · [OpenXnet インストーラー](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
 
-既定の `display` は過去の展示コードを保持します。GOAI release バッジは別の決勝リリースを示します。再現には以下の固定タグを取得してください。README の変更でタグ、ソース ZIP、稼働中サービスは更新されません。
+既定の `display` は過去の展示コードを保持します。GOAI release バッジは別の決勝リリースを示します。再現には以下の固定タグを取得してください。同じリリース文書を含む v1.3.0 ソース ZIP も利用できます。リリース文書の整理で稼働中サービスの再デプロイは行いません。
 
 ## 現在のデモとログイン
 
@@ -44,7 +44,7 @@ Maintainer: maoyo
 
 ガバナンス画面、リネージ・品質証拠、DAG 検証、常駐チャット・タスク・設定、統一ログイン・テーマ・スキン入出力を含みます。内部依存と Vite 本番ビルド、および対象テスト 47/47 件が成功しました。全型検査と全オンライン業務の検証は完了扱いではなく、Browserslist と大きな chunk の警告が残ります。
 
-詳細は [固定版納品ガイド](https://github.com/synapxnet/XnetDataops-web/blob/v1.3.0/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md) を参照してください。ソース公開、README 更新、今回の読み取り検証は、稼働中の全コンポーネントが同じコミットであることの証明ではありません。
+詳細は [固定版納品ガイド](https://github.com/synapxnet/XnetDataops-web/blob/v1.3.0/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md) を参照してください。ソース公開、README 更新、今回の読み取り検証は、稼働中の全コンポーネントが同じコミットであることの証明ではありません。 ビルドとテストの[プログラム検証基準 d5c66e45](https://github.com/synapxnet/XnetDataops-web/commit/d5c66e45f76732badfe3dd1c1c5ebb12b6be844d)を示します。その後のリリース整備は README のみを変更し、プログラムファイルは同一です。
 
 ## 固定版ビルド
 
