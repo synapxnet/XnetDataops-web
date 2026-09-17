@@ -1,4 +1,14 @@
-> GOAI 决赛版本 **1.3.0**：源码范围、构建验证与运行边界见 [交付说明](docs/GOAI-V1.3.0-SOURCE-DELIVERY.md)。
+## GOAI 决赛发布 · v1.3.0
+
+**[发布与源码下载](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [GOAI 开发分支](https://github.com/synapxnet/XnetDataops-web/tree/GOAI-Competition) · [配套后端 v1.3.0](https://github.com/synapxnet/XnetDataops/releases/tag/v1.3.0) · [OpenXnet 安装包](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
+
+当前分支持续维护 GOAI 决赛版本；发布页的 `v1.3.0` 标签固定已核验源码，本次 README 更新不会移动标签或重新部署线上服务。
+
+v1.3.0 提供治理工作台、血缘与质量证据、DAG 编辑校验及驻场 Agent 聊天/任务/配置入口，并统一登录、主题和皮肤。
+
+生产构建及 47 项定向测试通过；全量类型检查、全部页面线上验收未列为通过。 具体构建、依赖和边界见 [v1.3.0 源码交付说明](https://github.com/synapxnet/XnetDataops-web/blob/d5c66e45f76732badfe3dd1c1c5ebb12b6be844d/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md)。
+
+---
 
 <div align="center">
 
@@ -6,15 +16,17 @@
 
 **XnetDataops 数据工程与治理平台的 Web 控制台**
 
-[![Version](https://img.shields.io/badge/version-1.3.0-1677ff.svg)](http://www.xnetdataops.synapxnet.cn) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
+[![GOAI release](https://img.shields.io/badge/GOAI%20release-1.3.0-1677ff.svg)](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
 
 [在线体验](http://www.xnetdataops.synapxnet.cn) · [后端仓库 XnetDataops](https://github.com/synapxnet/XnetDataops) · [OpenXnet 开源社区](https://openxnet.synapxnet.com) · [查看许可](./LICENSE)
 
 </div>
 
+> 以下图片来自历史展示版本，仅用于说明功能布局，不是 v1.3.0 当前 UI 或本轮验收截图。
+
 ![XnetDataops 平台概览](./docs/images/xnetdataops-overview.png)
 
-## 页面预览
+## 页面预览（历史版本）
 
 | 演示登录 | 关于项目 |
 | --- | --- |
