@@ -1,3 +1,15 @@
+## GOAI finals release · v1.3.0
+
+**[Release and source downloads](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [GOAI branch](https://github.com/synapxnet/XnetDataops-web/tree/GOAI-Competition) · [Matching backend](https://github.com/synapxnet/XnetDataops/releases/tag/v1.3.0) · [OpenXnet installer](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
+
+This default `display` branch retains historical showcase code. The GOAI release badge links to the separate finals release; it does not claim that this branch or deployed services were upgraded. Download the pinned version from the release page.
+
+Version 1.3.0 adds the governance workbench, lineage and quality evidence, DAG validation, resident Agent chat/tasks/configuration, and consistent login/theme controls. Its production build and 47 targeted tests passed; full type checking and every online page were not accepted as complete.
+
+See the pinned [source delivery guide](https://github.com/synapxnet/XnetDataops-web/blob/d5c66e45f76732badfe3dd1c1c5ebb12b6be844d/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md) for build instructions, dependencies and verification limits. This documentation update does not move the release tag or redeploy services.
+
+---
+
 <div align="center">
 
 [简体中文](./README.md) | **English** | [日本語](./README.ja-JP.md)
@@ -6,15 +18,17 @@
 
 **Web console for data engineering, governance, services, and audit**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-1677ff.svg)](https://www.xnetdataops.synapxnet.cn) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
+[![GOAI release](https://img.shields.io/badge/GOAI%20release-1.3.0-1677ff.svg)](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
 
 [Live Demo](https://www.xnetdataops.synapxnet.cn) · [Backend: XnetDataops](https://github.com/synapxnet/XnetDataops) · [OpenXnet](https://openxnet.synapxnet.com) · [License](./LICENSE)
 
 </div>
 
+> The images below are historical showcase screenshots, not the current v1.3.0 UI or acceptance evidence.
+
 ![XnetDataops overview](./docs/images/xnetdataops-overview.png)
 
-## Product Tour
+## Product Tour (historical screenshots)
 
 | Demo login | Data source configuration |
 | --- | --- |

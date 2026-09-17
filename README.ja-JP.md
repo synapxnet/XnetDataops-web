@@ -1,3 +1,15 @@
+## GOAI 決勝リリース · v1.3.0
+
+**[リリースとソースのダウンロード](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) · [GOAI ブランチ](https://github.com/synapxnet/XnetDataops-web/tree/GOAI-Competition) · [対応するバックエンド](https://github.com/synapxnet/XnetDataops/releases/tag/v1.3.0) · [OpenXnet インストーラー](https://github.com/synapxnet/OpenXnet/releases/tag/v1.3.0)**
+
+既定の `display` ブランチは過去の展示コードを保持します。GOAI release バッジは別の決勝リリースを示し、このブランチや稼働中のサービス全体が更新済みであることを意味しません。固定版はリリースページから取得してください。
+
+v1.3.0 はガバナンス画面、リネージと品質エビデンス、DAG 検証、常駐 Agent のチャット・タスク・設定、統一ログインとテーマを提供します。本番ビルドと 47 件の対象テストは成功しましたが、全体の型検査と全オンライン画面の検証は完了扱いにしていません。
+
+ビルド、依存関係、検証範囲は [固定版ソース納品ガイド](https://github.com/synapxnet/XnetDataops-web/blob/d5c66e45f76732badfe3dd1c1c5ebb12b6be844d/docs/GOAI-V1.3.0-SOURCE-DELIVERY.md) を参照してください。README の更新でタグの移動やサービスの再デプロイは行いません。
+
+---
+
 <div align="center">
 
 [简体中文](./README.md) | [English](./README.en-US.md) | **日本語**
@@ -6,15 +18,17 @@
 
 **データエンジニアリング、ガバナンス、サービス、監査の Web コンソール**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-1677ff.svg)](https://www.xnetdataops.synapxnet.cn) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
+[![GOAI release](https://img.shields.io/badge/GOAI%20release-1.3.0-1677ff.svg)](https://github.com/synapxnet/XnetDataops-web/releases/tag/v1.3.0) [![Vue](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6.svg)](https://www.typescriptlang.org/) [![License](https://img.shields.io/badge/license-MIT-2ea44f.svg)](./LICENSE)
 
 [オンラインデモ](https://www.xnetdataops.synapxnet.cn) · [バックエンド: XnetDataops](https://github.com/synapxnet/XnetDataops) · [OpenXnet](https://openxnet.synapxnet.com) · [ライセンス](./LICENSE)
 
 </div>
 
+> 以下の画像は過去の展示版です。v1.3.0 の現在の UI や今回の検証結果を示すものではありません。
+
 ![XnetDataops 概要](./docs/images/xnetdataops-overview.png)
 
-## 画面プレビュー
+## 画面プレビュー（過去のバージョン）
 
 | デモログイン | データソース設定 |
 | --- | --- |
