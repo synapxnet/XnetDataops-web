@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import FeatureDriftEntry from '#/components/feature-drift/FeatureDriftEntry.vue';
 const pageRequestState = pageState();
 import { pageState } from '#/components/data-page/request-state';
 import DataPage from '#/components/data-page/index.vue';
@@ -81,6 +82,7 @@ onMounted(() => {
     description="编排数据任务，从运行依赖到数据产品交付。"
     title="运行实例"
   >
+    <FeatureDriftEntry label="跨域恢复 · 回填任务与质量" />
     <Table
       :scroll="{ x: 'max-content' }"
       :columns="columns"

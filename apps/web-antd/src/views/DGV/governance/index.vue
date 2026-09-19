@@ -9,6 +9,7 @@ __version__: 1.0.0 | __author__: maoyo | __copyright__: Copyright 2026 Synapxnet
 __maintainer__: maoyo | __email__: synapxnet@gmail.com
 -->
 <script setup lang="ts">
+import FeatureDriftEntry from '#/components/feature-drift/FeatureDriftEntry.vue';
 import {
   computed,
   inject,
@@ -194,6 +195,7 @@ onBeforeUnmount(() => {
 
 <template>
   <main class="data-governance" data-governance-workbench>
+    <FeatureDriftEntry label="跨域恢复 · 回填质量与血缘" />
     <header class="governance-header">
       <div>
         <h1>数据治理工作台</h1>
