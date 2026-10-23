@@ -16,6 +16,7 @@ import {
   parseRun,
   parseRuns,
   percent,
+  sourceLabel,
 } from './model.ts';
 
 /** 建立无测量的隔离记录。 Create an isolated record without measurements. */
@@ -115,4 +116,14 @@ test('comparison keeps the frozen fault baseline and latest stage readings', () 
   );
   assert.deepEqual(comparisonMeasurements(state), [baseline, active]);
   assert.equal(measurements(state).length, 3);
+});
+
+/** 生产与演练标签不能互相冒用。 / Production and rehearsal provenance pairs cannot impersonate each other. */
+test('explicit production evidence is accepted without relabelling rehearsal', () => {
+  const production = parseRun(run({ sourceMode: 'PRODUCTION', synthetic: false }));
+  assert.equal(sourceLabel(production), '生产数据');
+  assert.match(sourceLabel(parseRun(run())), /合成演练/);
+  assert.equal(sourceLabel(null), '请选择执行记录');
+  assert.throws(() => parseRun(run({ sourceMode: 'PRODUCTION', synthetic: true })));
+  assert.throws(() => parseRun(run({ sourceMode: 'CUSTOM', synthetic: false })));
 });

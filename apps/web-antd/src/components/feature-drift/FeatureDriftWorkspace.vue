@@ -39,6 +39,7 @@ import {
   records,
   short,
   status,
+  sourceLabel,
   time,
 } from './model';
 
@@ -307,8 +308,8 @@ onBeforeUnmount(pause);
       </div>
     </header>
     <div class="source-strip">
-      <span class="source-dot" /><strong>合成 Staging 数据 · 隔离环境</strong
-      ><span>实际 CSV 回填、CPU 训练、推理与采样；不代表生产收益。</span
+      <span class="source-dot" /><strong>{{ sourceLabel(selected) }}</strong
+      ><span>{{ selected?.synthetic ? '隔离环境中的回填、训练、推理与采样，不代表生产收益。' : '按事件与工作空间核验来源、执行回执和独立采样。' }}</span
       ><label><input v-model="autoRefresh" type="checkbox" />每 5 秒更新</label>
     </div>
     <p v-if="error" class="error-note" role="alert">

@@ -17,7 +17,7 @@ defineProps<{ label?: string }>();
       <strong>{{ label || '跨域特征漂移恢复' }}</strong>
       <span>查看同一事件的数据回填、训练产物与独立采样</span>
     </span>
-    <span class="drift-entry-caption">隔离 Staging · 执行证据</span>
+    <span class="drift-entry-caption">跨平台执行证据</span>
     <span class="drift-entry-open">打开 →</span>
   </RouterLink>
 </template>

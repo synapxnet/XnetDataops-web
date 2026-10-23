@@ -37,6 +37,9 @@ export interface ResidentEvent {
   id?: string;
   taskId?: string | null;
   type: string;
+  count?: number;
+  packVersion?: string | null;
+  knowledgeRefs?: Array<{ id: string; title: string; version: string }>;
   timestamp?: string;
   occurredAt?: string;
   message?: string;
@@ -117,7 +120,8 @@ export async function residentRequest<T>(
     Authorization: `Bearer ${context.token}`,
   });
   // 有组织选择时附加上下文；Attach context only when an organization is selected.
-  if (context.scope.tenantUid) headers.set('X-Tenant-Uid', context.scope.tenantUid);
+  if (context.scope.tenantUid)
+    headers.set('X-Tenant-Uid', context.scope.tenantUid);
   if (context.scope.deptUid) headers.set('X-Dept-Uid', context.scope.deptUid);
   if (context.scope.teamUid) headers.set('X-Team-Uid', context.scope.teamUid);
   if (context.userId) headers.set('X-User-Id', String(context.userId));
@@ -144,7 +148,8 @@ export async function residentRequest<T>(
   if (
     !response.ok ||
     envelope.ok === false ||
-    (typeof envelope.code === 'number' && envelope.code !== 0 &&
+    (typeof envelope.code === 'number' &&
+      envelope.code !== 0 &&
       (envelope.code < 200 || envelope.code >= 300))
   ) {
     const code = envelope.error?.code ?? envelope.code;

@@ -9,8 +9,8 @@
 export type EvidenceObject = Record<string, unknown>;
 export type Platform = 'aiops' | 'dataops' | 'mlops';
 export interface DriftRun extends EvidenceObject {
-  sourceMode: 'REAL_CPU_SYNTHETIC_STAGING';
-  synthetic: true;
+  sourceMode: 'PRODUCTION' | 'REAL_CPU_SYNTHETIC_STAGING';
+  synthetic: boolean;
   incidentId: string;
   workspaceId: string;
   traceId?: string;
@@ -46,7 +46,8 @@ export function parseRun(
   expectedWorkspace?: string,
 ): DriftRun {
   const row = object(value);
-  if (row.sourceMode !== 'REAL_CPU_SYNTHETIC_STAGING' || row.synthetic !== true)
+  if (!((row.sourceMode === 'PRODUCTION' && row.synthetic === false) ||
+        (row.sourceMode === 'REAL_CPU_SYNTHETIC_STAGING' && row.synthetic === true)))
     throw new Error('此记录未提供真实执行来源，不能作为本次恢复证据');
   if (
     typeof row.incidentId !== 'string' ||
@@ -69,6 +70,12 @@ export function parseRun(
     actions: records(row.actions),
   } as DriftRun;
 }
+/** 展示已核验来源，未选中记录不预设环境。 / Label verified provenance without assuming an environment before selection. */
+export function sourceLabel(run: DriftRun | null): string {
+  if (!run) return '请选择执行记录';
+  return run.sourceMode === 'PRODUCTION' ? '生产数据' : '合成演练数据 · 隔离环境';
+}
+
 /** 验证列表包络；缺少列表不是正常空列表。 Validate the list envelope; a missing list is not an empty result. */
 export function parseRuns(value: unknown): DriftRun[] {
   const source = object(value);

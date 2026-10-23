@@ -6,7 +6,14 @@ Author: maoyo | Department: 研发部 | Date: 2026-09-15 | Version: 1.3.0
 Security Level: INTERNAL | Maintainer: maoyo | Email: synapxnet@gmail.com
 -->
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue';
 import {
   ArrowRightLeft,
   ArrowUp,
@@ -17,6 +24,7 @@ import {
   Square,
 } from '@vben/icons';
 import { useAccessStore, useUserStore } from '@vben/stores';
+import { useRouter } from 'vue-router';
 import { Drawer } from 'ant-design-vue';
 import { isActiveTask, residentRequest, safeDetails } from './resident-api';
 import type {
@@ -33,6 +41,7 @@ const props = defineProps<{
   enabled: boolean;
 }>();
 const access = useAccessStore();
+const router = useRouter();
 const user = useUserStore();
 const open = ref(false);
 const view = ref<'chat' | 'tasks' | 'model'>('chat');
@@ -71,9 +80,12 @@ const tasks = computed(() =>
 );
 const active = computed(() => isActiveTask(selected.value));
 // 当前任务的轨迹不能混入其他回合；Keep the selected task trace separate from other turns.
-const taskEvents = computed(() => selectedConversation.value?.events.filter(
-  (event) => event.taskId === selected.value?.id,
-) ?? []);
+const taskEvents = computed(
+  () =>
+    selectedConversation.value?.events.filter(
+      (event) => event.taskId === selected.value?.id,
+    ) ?? [],
+);
 const configured = computed(() =>
   Boolean(
     health.value?.modelConfigured || health.value?.model?.apiKeyConfigured,
@@ -91,6 +103,25 @@ const scopeKey = computed(() =>
   ].join('|'),
 );
 
+/** 打开本平台知识与 Skill 工作台。 / Open the platform knowledge and Skill workbench. */
+function openCapabilities() {
+  open.value = false;
+  void router.push('/AGENT/capabilities');
+}
+/** 将任务事件转换为可读的工作步骤。 / Translate task events into readable work steps. */
+function eventLabel(value: string): string {
+  const names: Record<string, string> = {
+    'knowledge.retrieved': '查阅领域知识与候选 Skill',
+    'tool.started': '调用平台工具',
+    'tool.completed': '收到工具证据',
+    'tool.failed': '工具调用失败',
+    'task.started': '开始分析',
+    'task.completed': '本轮分析完成',
+    'task.failed': '任务未完成',
+    'collaboration.requested': '已保存协同请求',
+  };
+  return names[value] ?? value;
+}
 /** 将服务端状态映射为本地标签。 Map server state to a local label. */
 function status(value?: string) {
   return value ? (label[value.toUpperCase()] ?? value) : '未连接';
@@ -279,8 +310,10 @@ async function modelAction(action: 'save' | 'test') {
       await refresh();
     } else {
       await refresh();
-      testResult.value = health.value?.status === 'ONLINE'
-        ? '驻场服务在线。模型连接以会话实际返回为准。' : '驻场服务未就绪';
+      testResult.value =
+        health.value?.status === 'ONLINE'
+          ? '驻场服务在线。模型连接以会话实际返回为准。'
+          : '驻场服务未就绪';
     }
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : '模型配置保存失败';
@@ -306,8 +339,12 @@ function visibilityChanged(value: boolean) {
 watch(scopeKey, resetScope);
 watch(open, visibilityChanged);
 /** 从助手管理页打开现有面板；Open the existing panel from assistant management. */
-function showResident() { if (props.enabled) open.value = true; }
-onMounted(() => window.addEventListener('synapxnet:open-resident', showResident));
+function showResident() {
+  if (props.enabled) open.value = true;
+}
+onMounted(() =>
+  window.addEventListener('synapxnet:open-resident', showResident),
+);
 onBeforeUnmount(() => {
   invalidate();
   window.removeEventListener('synapxnet:open-resident', showResident);
@@ -323,11 +360,8 @@ onBeforeUnmount(() => {
     :disabled="!enabled"
     @click="open = true"
   >
-    <InspectionPanel :size="18" /><span>驻场 Agent</span><span
-      v-if="activeCount"
-      class="resident-count"
-      >{{ activeCount }}</span
-    >
+    <InspectionPanel :size="18" /><span>驻场 Agent</span
+    ><span v-if="activeCount" class="resident-count">{{ activeCount }}</span>
   </button>
   <Drawer
     v-model:open="open"
@@ -351,6 +385,13 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <div class="resident-tabbar">
+        <button
+          type="button"
+          title="查看领域知识、Skill 与工具权限"
+          @click="openCapabilities"
+        >
+          能力库 ↗
+        </button>
         <button
           type="button"
           :aria-selected="view === 'chat'"
@@ -431,14 +472,28 @@ onBeforeUnmount(() => {
                 <span>{{ taskEvents.length }} 条</span>
               </summary>
               <ol>
-                <li
-                  v-for="event in taskEvents"
-                  :key="event.id"
-                >
+                <li v-for="event in taskEvents" :key="event.id">
                   <details>
                     <summary>
-                      {{ event.type }} <time>{{ time(event.occurredAt) }}</time>
+                      {{ eventLabel(event.type) }}
+                      <time>{{ time(event.occurredAt) }}</time>
                     </summary>
+                    <div v-if="event.type === 'knowledge.retrieved'">
+                      <p>
+                        已检索 {{ event.count ?? 0 }} 条平台资料 · 版本
+                        {{ event.packVersion || '未提供' }}
+                      </p>
+                      <ul>
+                        <li
+                          v-for="reference in event.knowledgeRefs ?? []"
+                          :key="reference.id"
+                        >
+                          {{ reference.title }} · {{ reference.version
+                          }}<br /><small>{{ reference.id }}</small>
+                        </li>
+                      </ul>
+                      <p>资料说明仅作为参考，本轮状态仍以工具证据为准。</p>
+                    </div>
                     <pre>{{ safeDetails(event) }}</pre>
                   </details>
                 </li>

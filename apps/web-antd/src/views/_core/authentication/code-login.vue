@@ -46,8 +46,8 @@ async function sendCode() {
       countdown.value--;
       if (countdown.value <= 0) clearInterval(timer);
     }, 1000);
-  } catch {
-    error.value = '验证码发送失败，请稍后重试';
+  } catch (cause) {
+    error.value = cause instanceof Error ? cause.message : '验证码发送失败，请稍后重试';
   } finally {
     sending.value = false;
   }
