@@ -14,6 +14,8 @@ export const overridesPreferences = defineOverridesPreferences({
     enableCheckUpdates: false,
     name: import.meta.env.VITE_APP_TITLE,
   },
+  theme: { colorPrimary: '#187bbd', mode: 'light', radius: '0.75' },
+  breadcrumb: { enable: false },
   copyright: {
     companyName: 'SynapXnet',
     companySiteLink: 'https://openxnet.synapxnet.com',

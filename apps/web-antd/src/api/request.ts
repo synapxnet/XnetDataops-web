@@ -17,7 +17,14 @@ import { message } from 'ant-design-vue';
 
 import { useAuthStore } from '#/store';
 
+import {
+  beginRequest,
+  finishRequest,
+  requestIsCurrent,
+  type RequestContext,
+} from '#/components/data-page/request-state';
 import { refreshTokenApi } from './core';
+import { normalizeRequestFailure } from './public-error';
 
 const {
   apiURL,
@@ -34,6 +41,34 @@ const {
   dauApiURL,
 } = useAppConfig(import.meta.env, import.meta.env.PROD);
 
+const ORGANIZATION_SCOPE_KEY = 'synapxnet:organization-scope';
+
+interface OrganizationScope {
+  deptUid: null | string;
+  teamUid: null | string;
+  tenantUid: null | string;
+}
+
+/** 读取当前页签内的组织范围，解析失败时按未授权处理。 Read tab-local organization scope and return no scope on parsing failure. */
+function readOrganizationScope(): null | OrganizationScope {
+  try {
+    const raw = globalThis.sessionStorage?.getItem(ORGANIZATION_SCOPE_KEY);
+    return raw ? (JSON.parse(raw) as OrganizationScope) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 将已选租户、部门和团队写入业务请求头，供服务端二次校验。 Attach the selected scope for authoritative server-side verification. */
+function appendOrganizationScopeHeaders(headers: Record<string, any>) {
+  const scope = readOrganizationScope();
+  if (!scope?.tenantUid || !scope.deptUid || !scope.teamUid) return;
+  headers['X-Tenant-Uid'] = scope.tenantUid;
+  headers['X-Dept-Uid'] = scope.deptUid;
+  headers['X-Team-Uid'] = scope.teamUid;
+}
+
+/** 创建携带组织范围、去重和响应代次保护的业务客户端。 Create a business client with scope headers, duplicate-write prevention and response freshness. */
 function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({
     ...options,
@@ -42,7 +77,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   });
 
   /**
-   * 重新认证逻辑
+   * 清除失效会话并重新认证。 Clear the expired session and require authentication again.
    */
   async function doReAuthenticate() {
     console.warn('Access token or refresh token is invalid or expired. ');
@@ -51,7 +86,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   }
 
   /**
-   * 刷新token逻辑
+   * 刷新令牌并更新会话监测。 Refresh the token and update session expiration monitoring.
    */
   async function doRefreshToken() {
     const accessStore = useAccessStore();
@@ -62,6 +97,7 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
     return newToken;
   }
 
+  /** 格式化当前身份令牌，不生成替代凭证。 Format the current token without inventing credentials. */
   function formatToken(token: null | string) {
     return token ? `Bearer ${token}` : null;
   }
@@ -77,10 +113,51 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
       if (userStore.userInfo?.userId) {
         config.headers['X-User-Id'] = userStore.userInfo.userId;
       }
+      appendOrganizationScopeHeaders(config.headers);
+      // 记录业务请求的组织和端点代次。 Capture organization and endpoint generation for each business request.
+      if (
+        baseURL !== apiURL ||
+        /^\/(users|roles|user-roles)(\/|$)/.test(config.url ?? '')
+      )
+        (
+          config as typeof config & { dataopsContext?: RequestContext }
+        ).dataopsContext = beginRequest(
+          config.method ?? 'GET',
+          baseURL + (config.url ?? ''),
+        );
       return config;
     },
   });
 
+  // 在解包前保留失败与最新请求状态。 Retain failure and freshness before unwrapping the response.
+  client.addResponseInterceptor({
+    fulfilled: (response) => {
+      const context = (
+        response.config as typeof response.config & {
+          dataopsContext?: RequestContext;
+        }
+      ).dataopsContext;
+      if (context) {
+        const failure =
+          response.data?.code !== undefined && response.data.code !== 0
+            ? { response }
+            : undefined;
+        finishRequest(context, failure);
+        if (!requestIsCurrent(context))
+          throw Object.assign(new Error('请求范围已更新，请使用当前页面数据'), {
+            dataopsStale: true,
+          });
+      }
+      return response;
+    },
+    rejected: (error) => {
+      const context = error?.config?.dataopsContext as
+        | RequestContext
+        | undefined;
+      if (context) finishRequest(context, error);
+      return Promise.reject(error);
+    },
+  });
   // 处理返回的响应数据格式
   client.addResponseInterceptor(
     defaultResponseInterceptor({
@@ -104,12 +181,39 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   // 通用的错误处理
   client.addResponseInterceptor(
     errorMessageResponseInterceptor((msg: string, error) => {
-      const responseData = error?.response?.data ?? {};
-      const errorMessage = responseData?.error ?? responseData?.message ?? '';
-      message.error(errorMessage || msg);
+      const visibleMessage = normalizeRequestFailure(error, msg);
+      // 业务请求由页面状态或局部错误区呈现，登录请求仍反馈。 / Business pages own inline failures; authentication retains feedback.
+      if (!error?.config?.dataopsContext && !error?.dataopsStale) {
+        message.error({ content: visibleMessage, key: 'request-error' });
+      }
     }),
   );
 
+  return client;
+}
+
+/**
+ * 创建保留公共 ToolResponse 包络的 Agent 请求客户端。 Create an Agent client that preserves the public ToolResponse envelope.
+ *
+ * @param serviceBaseURL 领域服务原有 API 地址
+ * @returns Agent 证据请求客户端
+ */
+function createAgentRequestClient(serviceBaseURL: string) {
+  const baseURL = serviceBaseURL.replace(/\/api\/[^/]+\/?$/, '');
+  const client = new RequestClient({
+    baseURL,
+    responseReturn: 'data',
+    timeout: 60_000,
+  });
+  client.addRequestInterceptor({
+    fulfilled: async (config) => {
+      const token = useAccessStore().accessToken;
+      config.headers.Authorization = token ? `Bearer ${token}` : null;
+      config.headers['Accept-Language'] = preferences.app.locale;
+      appendOrganizationScopeHeaders(config.headers);
+      return config;
+    },
+  });
   return client;
 }
 
@@ -172,5 +276,9 @@ export const dobRequestClient = createRequestClient(dobApiURL, {
 export const dauRequestClient = createRequestClient(dauApiURL, {
   responseReturn: 'data',
 });
+
+export const agentDqmRequestClient = createAgentRequestClient(dqmApiURL);
+export const agentDgvRequestClient = createAgentRequestClient(dgvApiURL);
+export const agentTskRequestClient = createAgentRequestClient(tskApiURL);
 
 export const baseRequestClient = new RequestClient({ baseURL: apiURL });

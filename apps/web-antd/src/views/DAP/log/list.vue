@@ -1,6 +1,14 @@
 <script lang="ts" setup>
+import DataPage from '#/components/data-page/index.vue';
 import { ref, onMounted } from 'vue';
-import { Card, Table, Tag, InputNumber, Button, Space, message } from 'ant-design-vue';
+import {
+  Table,
+  Tag,
+  InputNumber,
+  Button,
+  Space,
+  message,
+} from 'ant-design-vue';
 import { getCallLogs } from '../api/apiConfig';
 import type { ApiCallLog } from '../api/types';
 
@@ -9,9 +17,24 @@ const dataList = ref<ApiCallLog[]>([]);
 const filterApiConfigId = ref<number | undefined>(undefined);
 
 const columns = [
-  { title: 'API配置ID', dataIndex: 'apiConfigId', key: 'apiConfigId', width: 120 },
-  { title: '响应状态', dataIndex: 'responseStatus', key: 'responseStatus', width: 120 },
-  { title: '响应时间(ms)', dataIndex: 'responseTime', key: 'responseTime', width: 130 },
+  {
+    title: 'API配置ID',
+    dataIndex: 'apiConfigId',
+    key: 'apiConfigId',
+    width: 120,
+  },
+  {
+    title: '响应状态',
+    dataIndex: 'responseStatus',
+    key: 'responseStatus',
+    width: 120,
+  },
+  {
+    title: '响应时间(ms)',
+    dataIndex: 'responseTime',
+    key: 'responseTime',
+    width: 130,
+  },
   { title: 'IP地址', dataIndex: 'ipAddress', key: 'ipAddress', width: 160 },
   { title: '调用时间', dataIndex: 'calledAt', key: 'calledAt', width: 200 },
 ];
@@ -24,6 +47,7 @@ function statusColor(status: number): string {
   return 'default';
 }
 
+/** 载入当前条件下的列表并维护加载状态。 Load the list for the current filters and maintain loading state. */
 async function fetchList() {
   loading.value = true;
   try {
@@ -36,38 +60,53 @@ async function fetchList() {
   }
 }
 
+/** 按当前搜索条件查询。 Search using the current query. */
 function handleSearch() {
   fetchList();
 }
 
+/** 重置筛选条件并查询。 Reset filters and reload. */
 function handleReset() {
   filterApiConfigId.value = undefined;
   fetchList();
 }
 
-onMounted(() => { fetchList(); });
+onMounted(() => {
+  fetchList();
+});
 </script>
 
 <template>
-  <div class="p-4">
-    <Card title="调用日志">
-      <template #extra>
-        <Space>
-          <InputNumber v-model:value="filterApiConfigId" placeholder="按API配置ID筛选" :min="1" style="width: 200px;" />
-          <Button type="primary" @click="handleSearch">查询</Button>
-          <Button @click="handleReset">重置</Button>
-        </Space>
-      </template>
-      <Table :columns="columns" :data-source="dataList" :loading="loading" row-key="id" :scroll="{ x: 800 }">
-        <template #bodyCell="{ column, record: _record }">
-          <template v-if="column.key === 'responseStatus'">
-            <Tag :color="statusColor((_record as any).responseStatus)">{{ (_record as any).responseStatus }}</Tag>
-          </template>
-          <template v-if="column.key === 'responseTime'">
-            <span>{{ (_record as any).responseTime }} ms</span>
-          </template>
+  <DataPage description="把可信数据转化为可管理的服务接口。" title="调用日志">
+    <template #extra>
+      <Space>
+        <InputNumber
+          v-model:value="filterApiConfigId"
+          placeholder="按API配置ID筛选"
+          :min="1"
+          style="width: 200px"
+        />
+        <Button type="primary" @click="handleSearch">查询</Button>
+        <Button @click="handleReset">重置</Button>
+      </Space>
+    </template>
+    <Table
+      :columns="columns"
+      :data-source="dataList"
+      :loading="loading"
+      row-key="id"
+      :scroll="{ x: 800 }"
+    >
+      <template #bodyCell="{ column, record: _record }">
+        <template v-if="column.key === 'responseStatus'">
+          <Tag :color="statusColor((_record as any).responseStatus)">{{
+            (_record as any).responseStatus
+          }}</Tag>
         </template>
-      </Table>
-    </Card>
-  </div>
+        <template v-if="column.key === 'responseTime'">
+          <span>{{ (_record as any).responseTime }} ms</span>
+        </template>
+      </template>
+    </Table>
+  </DataPage>
 </template>

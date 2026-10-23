@@ -1,9 +1,19 @@
-name: Build display web
+# Copyright (C) 2026 Synapxnet. All rights reserved.
+# This file is Synapxnet Proprietary and Confidential.
+# 主线构建验证 / Mainline build validation.
+# Author: maoyo | Department: 研发部 | Date: 2026-10-23 | Version: 1.3.0
+# Security Level: INTERNAL | Maintainer: maoyo | Email: synapxnet@gmail.com
+name: Build DataOps web
 
 on:
   push:
     branches:
       - display
+      - main
+  pull_request:
+    branches:
+      - display
+      - main
   workflow_dispatch:
 
 permissions:
@@ -34,6 +44,9 @@ jobs:
 
       - name: Build web application
         run: pnpm build:antd
+
+      - name: Run unit and evidence tests
+        run: pnpm test:unit
 
       - name: Upload web artifact
         uses: actions/upload-artifact@v4

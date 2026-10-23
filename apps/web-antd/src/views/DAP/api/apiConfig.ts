@@ -1,4 +1,4 @@
-import type { ApiCallLog, ApiConfig, ApiKey } from './types';
+import type { ApiCallLog, ApiConfig, ApiKey, ApiKeySummary } from './types';
 
 import { dapRequestClient } from '#/api/request';
 
@@ -31,17 +31,18 @@ export function deprecateConfig(id: number) {
   return dapRequestClient.post(`/configs/${id}/deprecate`);
 }
 
-// API密钥管理
+/** 读取服务端脱敏密钥摘要，不请求凭据正文。 Read server-masked summaries without requesting secret credentials. */
 export function getKeys() {
-  return dapRequestClient.get<ApiKey[]>('/keys');
+  return dapRequestClient.get<ApiKeySummary[]>('/keys');
 }
 
 export function createKey(data: Partial<ApiKey>) {
   return dapRequestClient.post<ApiKey>('/keys', data);
 }
 
+/** 吊销密钥并只返回公开摘要。 Revoke a key and return only its public summary. */
 export function revokeKey(id: number) {
-  return dapRequestClient.post(`/keys/${id}/revoke`);
+  return dapRequestClient.post<ApiKeySummary>(`/keys/${id}/revoke`);
 }
 
 export function deleteKey(id: number) {

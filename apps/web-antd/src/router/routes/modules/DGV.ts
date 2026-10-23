@@ -11,6 +11,13 @@ const routes: RouteRecordRaw[] = [
     path: '/DGV',
     children: [
       {
+        name: 'DataGovernanceWorkbench',
+        path: '/DGV/governance',
+        // 加载原生只读工作台，保留原有菜单。 Load the read-only native workbench while preserving existing routes.
+        component: () => import('#/views/DGV/governance/index.vue'),
+        meta: { icon: 'lucide:workflow', title: '治理工作台' },
+      },
+      {
         name: 'MetaCatalogList',
         path: '/DGV/catalog/list',
         component: () => import('#/views/DGV/catalog/list.vue'),

@@ -1,0 +1,364 @@
+/* Copyright (C) 2026 Synapxnet. All rights reserved.
+This file is Synapxnet Proprietary and Confidential. It is strictly
+forbidden to copy, distribute, or use without explicit authorization.
+用途：统一数据平台视觉体系。Purpose: Unified visual system for the data platform.
+Author: maoyo | Department: 研发部 | Date: 2026-09-13 | Version: 1.0.0 | Security Level: INTERNAL
+__version__: 1.0.0 | __author__: maoyo | __copyright__: Copyright 2026 Synapxnet
+__maintainer__: maoyo | __email__: synapxnet@gmail.com */
+:root {
+  --dataops-radius: 12px;
+  --dataops-space: 24px;
+  --dataops-background-opacity: 0.15;
+  --dataops-background-image: none;
+}
+.dataops-app {
+  min-height: 100dvh;
+  color: hsl(var(--foreground));
+}
+.dataops-app:before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: var(--dataops-background-image);
+  background-size: cover;
+  background-position: center;
+  opacity: var(--dataops-background-opacity);
+}
+.data-page {
+  width: 100%;
+  min-width: 0;
+  padding: calc(var(--dataops-space) * 0.75) var(--dataops-space);
+  position: relative;
+}
+.data-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 40px;
+  margin: 0 0 14px;
+}
+.data-page__heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.data-page__heading h1 {
+  font-size: 19px;
+  line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.data-page__help.ant-btn {
+  color: hsl(var(--muted-foreground));
+  padding-inline: 5px;
+  flex-shrink: 0;
+}
+.data-page__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  max-width: 75%;
+}
+.data-page__actions .ant-space {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.data-page__content {
+  min-width: 0;
+}
+.data-page__error {
+  margin-bottom: 16px;
+}
+.data-page__content > .ant-form:not(.datasource-form) {
+  max-width: 960px !important;
+  margin: 0;
+  padding: 22px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: var(--dataops-radius);
+}
+.data-page__content > .ant-form .ant-space {
+  flex-wrap: wrap;
+}
+.data-page__content .ant-row {
+  row-gap: 16px;
+}
+.data-page .ant-card {
+  border-radius: var(--dataops-radius);
+  border-color: hsl(var(--border) / 0.8);
+  box-shadow: none;
+}
+.data-page .ant-card .ant-card {
+  border: 0;
+  background: transparent;
+}
+.data-page .ant-card-head {
+  min-height: 46px;
+  padding-inline: 18px;
+  font-size: 14px;
+}
+.data-page .ant-card-body {
+  padding: 18px;
+}
+.data-page .ant-statistic-title {
+  font-size: 12px;
+}
+.data-page .ant-statistic-content {
+  font-weight: 650;
+  letter-spacing: -0.5px;
+}
+.data-page .ant-table-wrapper {
+  max-width: 100%;
+  min-width: 0;
+}
+.data-page__content > .ant-table-wrapper {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: var(--dataops-radius);
+  overflow: hidden;
+}
+.data-page__content > .ant-table-wrapper .ant-pagination {
+  margin: 14px 16px;
+}
+.data-page .ant-table-tbody > tr > td {
+  padding-block: 12px;
+}
+.data-page .ant-table-cell {
+  font-size: 13px;
+  vertical-align: middle;
+}
+.data-page .ant-table-thead > tr > th {
+  font-size: 12px;
+  font-weight: 600;
+  color: hsl(var(--foreground) / 0.8);
+  background: hsl(var(--muted) / 0.75);
+}
+.data-page .ant-table-tbody > tr > td {
+  border-color: hsl(var(--border) / 0.6);
+}
+.data-page .ant-table-content {
+  overflow-x: auto !important;
+}
+.data-page .ant-table-cell .ant-space {
+  gap: 2px !important;
+}
+.data-page .ant-table-cell .ant-btn-link {
+  padding: 0 6px;
+}
+.data-page .ant-empty {
+  padding: 38px 0;
+  color: hsl(var(--muted-foreground));
+}
+.data-page[data-read-failed='true'] .ant-table,
+.data-page[data-read-failed='true'] .ant-statistic-content,
+.data-page[data-read-failed='true'] .ant-descriptions {
+  display: none;
+}
+.data-page[data-read-failed='true'] .ant-table-wrapper:after {
+  content: '数据暂不可用，请刷新重试。';
+  display: block;
+  text-align: center;
+  padding: 48px 20px;
+  color: hsl(var(--muted-foreground));
+}
+.data-page[data-read-failed='true'] .ant-statistic:after {
+  content: '暂不可用';
+  color: hsl(var(--muted-foreground));
+  font-size: 14px;
+}
+.ant-modal-content,
+.ant-drawer-content {
+  border-radius: var(--dataops-radius) !important;
+}
+.ant-modal-body {
+  max-height: 72dvh;
+  overflow: auto;
+}
+.ant-modal-title,
+.ant-drawer-title {
+  font-weight: 650 !important;
+}
+.ant-form-item-label > label {
+  font-size: 13px !important;
+}
+.ant-form-item {
+  margin-bottom: 20px;
+}
+/* 提升可编辑控件的提示对比度，禁用态继续使用组件样式。 Improve editable placeholder contrast while preserving component disabled styles. */
+.data-page input:not(:disabled):not([aria-disabled='true'])::placeholder,
+.data-page textarea:not(:disabled):not([aria-disabled='true'])::placeholder,
+.data-page
+  .ant-select:not(.ant-select-disabled):not([aria-disabled='true'])
+  .ant-select-selection-placeholder {
+  color: hsl(var(--muted-foreground));
+  opacity: 1;
+}
+.ant-btn {
+  box-shadow: none;
+}
+.ant-btn:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+.ant-descriptions-item-content {
+  overflow-wrap: anywhere;
+}
+.ant-select-dropdown,
+.ant-cascader-dropdown {
+  max-width: calc(100vw - 24px);
+}
+.ant-cascader-menus {
+  max-width: calc(100vw - 24px);
+  overflow-x: auto;
+}
+.ant-drawer-content-wrapper {
+  max-width: 100vw;
+}
+.ant-modal {
+  max-width: calc(100vw - 24px);
+}
+.dataops-app pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.dataops-app main {
+  min-width: 0;
+}
+.dataops-app .ant-form-item-control-input-content > .ant-input-number {
+  width: 100%;
+}
+[data-dataops-density='compact'] .data-page .ant-table-tbody > tr > td {
+  padding-block: 8px;
+}
+[data-dataops-density='compact'] .data-page__header {
+  margin-bottom: 10px;
+}
+[data-dataops-density='compact'] .ant-form-item {
+  margin-bottom: 14px;
+}
+@media (max-width: 900px) {
+  .data-page__header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .data-page__actions {
+    max-width: 100%;
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 768px) {
+  /* 小窗口统一横向滚动表头和数据，避免固定操作列遮住主体。 Scroll headers and rows together in narrow windows so fixed action columns cannot cover the table. */
+  .ant-table-wrapper .ant-table-cell-fix-left,
+  .ant-table-wrapper .ant-table-cell-fix-right {
+    position: static !important;
+    inset-inline: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: auto !important;
+  }
+  .ant-table-wrapper .ant-table-cell-fix-left::after,
+  .ant-table-wrapper .ant-table-cell-fix-right::after {
+    display: none !important;
+  }
+  .data-page {
+    padding: 16px;
+  }
+  .data-page__heading h1 {
+    font-size: 18px;
+  }
+  .data-page .ant-row > .ant-col-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  .data-page .ant-row > .ant-col-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .data-page .ant-card-body {
+    padding: 16px;
+  }
+  .ant-modal {
+    top: 24px;
+  }
+  .ant-descriptions-view table {
+    table-layout: fixed;
+  }
+  .data-page__actions .ant-input-search {
+    max-width: 100%;
+  }
+}
+@media (max-width: 480px) {
+  .data-page {
+    padding: 12px;
+  }
+  .data-page__actions {
+    width: 100%;
+    gap: 6px;
+  }
+  .data-page__actions > .ant-space {
+    width: 100%;
+  }
+  .data-page__actions .ant-select,
+  .data-page__actions .ant-input-number,
+  .data-page__actions .ant-input-affix-wrapper {
+    max-width: 100%;
+  }
+  .data-page__heading h1 {
+    font-size: 18px;
+  }
+  .ant-drawer-body {
+    padding: 16px !important;
+  }
+  .ant-modal-body .ant-row {
+    display: block;
+  }
+  .ant-modal-body .ant-col {
+    max-width: 100%;
+    width: 100%;
+  }
+  .data-page .ant-form-item .ant-space {
+    flex-wrap: wrap;
+  }
+  .data-page .ant-pagination-options {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dataops-app * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
+/* 本地背景只覆盖页面底层，文字与控件保持独立对比度。 Apply local backgrounds beneath page content while preserving text and control contrast. */
+.data-page::before,
+.data-governance::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--dataops-background-image);
+  background-position: center;
+  background-size: cover;
+  opacity: var(--dataops-background-opacity);
+  z-index: 0;
+  border-radius: var(--dataops-radius);
+}
+.data-page > *,
+.data-governance > * {
+  position: relative;
+  z-index: 1;
+}
+.data-governance {
+  position: relative;
+}

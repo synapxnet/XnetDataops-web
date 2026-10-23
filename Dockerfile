@@ -1,5 +1,5 @@
 # 使用官方 Nginx 镜像作为基础镜像
-FROM 127.0.0.1/library/nginx:alpine
+FROM 192.168.10.132/library/nginx:alpine
 
 # 设置工作目录
 WORKDIR /usr/share/nginx/html

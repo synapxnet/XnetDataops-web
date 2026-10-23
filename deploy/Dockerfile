@@ -1,5 +1,5 @@
 # 使用 NGINX 1.24 镜像
-FROM 127.0.0.1/library/nginx:1.24
+FROM 192.168.10.132/library/nginx:1.24
 
 # 删除 /usr/share/nginx/html 目录
 RUN rm -rf /usr/share/nginx/html

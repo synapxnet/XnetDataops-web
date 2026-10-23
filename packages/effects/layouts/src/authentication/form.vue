@@ -1,3 +1,14 @@
+<!--
+#!/usr/bin/env vue
+# -*- coding: utf-8 -*-
+# Copyright (C) 2026 Synapxnet. All rights reserved.
+# This file is Synapxnet Proprietary and Confidential. It is strictly
+# forbidden to copy, distribute, or use without explicit authorization.
+# 复赛认证视觉与决赛入口 / Semifinal authentication visuals and finals navigation
+# Author: maoyo | Department: 研发部 | Date: 2026-09-17
+# Version: 1.3.0 | Security Level: INTERNAL
+# Maintainer: maoyo | Email: synapxnet@gmail.com
+-->
 <script setup lang="ts">
 defineOptions({
   name: 'AuthenticationFormView',
@@ -6,8 +17,8 @@ defineOptions({
 
 <template>
   <div class="auth-form-view">
-    <slot></slot>
     <div class="auth-form-inner">
+      <slot></slot>
       <RouterView v-slot="{ Component, route }">
         <Transition appear mode="out-in" name="slide-right">
           <KeepAlive :include="['Login']">

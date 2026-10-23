@@ -1,6 +1,6 @@
 {
   "name": "xnetdataops-web",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "private": true,
   "keywords": [
     "DataOps",
@@ -51,7 +51,8 @@
     "preview": "turbo-run preview",
     "publint": "vsh publint",
     "reinstall": "pnpm clean --del-lock && pnpm install",
-    "test:unit": "vitest run --dom",
+    "test:unit": "vitest run --dom && pnpm test:evidence",
+    "test:evidence": "node --test apps/web-antd/src/components/feature-drift/model.test.mjs",
     "test:e2e": "turbo run test:e2e",
     "update:deps": "npx taze -r -w",
     "version": "pnpm exec changeset version && pnpm install --no-frozen-lockfile"

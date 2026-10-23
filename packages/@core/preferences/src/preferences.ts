@@ -32,11 +32,13 @@ class PreferenceManager {
   constructor() {
     this.cache = new StorageManager();
 
-    // 避免频繁的操作缓存
-    this.savePreferences = useDebounceFn(
+    // 延迟保存独立快照，避免后续皮肤预览被旧的定时保存持久化。 Debounce immutable snapshots so later skin previews cannot leak into an earlier save.
+    const saveSnapshot = useDebounceFn(
       (preference: Preferences) => this._savePreferences(preference),
       150,
     );
+    this.savePreferences = (preference: Preferences) =>
+      saveSnapshot(JSON.parse(JSON.stringify(preference)) as Preferences);
   }
 
   clearCache() {
@@ -110,17 +112,18 @@ class PreferenceManager {
   }
 
   /**
-   * 更新偏好设置
+   * 更新偏好设置，可选择仅预览。 Update preferences with optional transient preview.
    * @param updates - 要更新的偏好设置
    */
-  public updatePreferences(updates: DeepPartial<Preferences>) {
+  public updatePreferences(updates: DeepPartial<Preferences>, persist = true) {
     const mergedState = merge({}, updates, markRaw(this.state));
 
     Object.assign(this.state, mergedState);
 
     // 根据更新的键值执行相应的操作
     this.handleUpdates(updates);
-    this.savePreferences(this.state);
+    // 皮肤草稿可预览但不写入持久化偏好。 Preview skin drafts without persisting preference changes.
+    if (persist) this.savePreferences(this.state);
   }
 
   /**
@@ -197,10 +200,9 @@ class PreferenceManager {
     // 监听系统主题偏好设置变化
     window
       .matchMedia('(prefers-color-scheme: dark)')
-      .addEventListener('change', ({ matches: isDark }) => {
-        this.updatePreferences({
-          theme: { mode: isDark ? 'dark' : 'light' },
-        });
+      .addEventListener('change', () => {
+        // 系统变更只影响自动模式，保留手动明暗选择。 Apply system changes only in automatic mode and preserve explicit choices.
+        if (this.state.theme.mode === 'auto') updateCSSVariables(this.state);
       });
   }
 

@@ -38,7 +38,7 @@
   "qrcodeSubtitle": "请用手机扫描二维码登录",
   "qrcodePrompt": "扫码后点击 '确认'，即可完成登录",
   "qrcodeLogin": "扫码登录",
-  "codeSubtitle": "使用演示手机号与验证码进入数据运维工作台",
+  "codeSubtitle": "使用企业手机号与短信验证码进入数据运维工作台",
   "code": "验证码",
   "codeTip": "请输入{0}位验证码",
   "mobile": "手机号码",

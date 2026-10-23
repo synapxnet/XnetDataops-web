@@ -1,7 +1,29 @@
 <script lang="ts" setup>
+const pageRequestState = pageState();
+import { pageState } from '#/components/data-page/request-state';
+import DataPage from '#/components/data-page/index.vue';
 import { ref, onMounted, reactive } from 'vue';
-import { Card, Table, Button, Tag, Space, Modal, Form, FormItem, Input, InputNumber, Select, SelectOption, Switch, Textarea, message } from 'ant-design-vue';
-import { getPolicies, createPolicy, updatePolicy, deletePolicy, togglePolicy } from '../api/masking';
+import {
+  Table,
+  Button,
+  Tag,
+  Space,
+  Modal,
+  Form,
+  FormItem,
+  Input,
+  InputNumber,
+  Switch,
+  Textarea,
+  message,
+} from 'ant-design-vue';
+import {
+  getPolicies,
+  createPolicy,
+  updatePolicy,
+  deletePolicy,
+  togglePolicy,
+} from '../api/masking';
 import type { MaskingPolicy } from '../api/types';
 
 const loading = ref(false);
@@ -31,6 +53,7 @@ const formState = reactive({
   description: '',
 });
 
+/** 载入当前条件下的列表并维护加载状态。 Load the list for the current filters and maintain loading state. */
 async function fetchList() {
   loading.value = true;
   try {
@@ -43,6 +66,7 @@ async function fetchList() {
   }
 }
 
+/** 初始化新增草稿并打开表单。 Initialize a creation draft and open its form. */
 function showCreate() {
   editingId.value = null;
   Object.assign(formState, {
@@ -58,6 +82,7 @@ function showCreate() {
   modalVisible.value = true;
 }
 
+/** 把选中记录复制到编辑草稿。 Copy the selected record into an edit draft. */
 function showEdit(record: MaskingPolicy) {
   editingId.value = record.id;
   Object.assign(formState, {
@@ -73,6 +98,7 @@ function showEdit(record: MaskingPolicy) {
   modalVisible.value = true;
 }
 
+/** 校验并提交当前表单，失败保留输入。 Validate and submit the current form while retaining input on failure. */
 async function handleSubmit() {
   if (!formState.name || !formState.tableName || !formState.columnName) {
     message.error('策略名称、表名和列名不能为空');
@@ -93,6 +119,7 @@ async function handleSubmit() {
   }
 }
 
+/** 切换选中资源状态并刷新列表。 Toggle the selected resource state and refresh the list. */
 async function handleToggle(record: MaskingPolicy) {
   try {
     await togglePolicy(record.id);
@@ -103,6 +130,7 @@ async function handleToggle(record: MaskingPolicy) {
   }
 }
 
+/** 确认后删除选中记录。 Delete the selected record after confirmation. */
 function handleDelete(record: MaskingPolicy) {
   Modal.confirm({
     title: '确认删除',
@@ -115,11 +143,14 @@ function handleDelete(record: MaskingPolicy) {
         fetchList();
       } catch (e: any) {
         message.error('删除失败: ' + e.message);
+
+        throw e;
       }
     },
   });
 }
 
+/** 应用当前筛选条件。 Apply the current filters. */
 function handleFilter() {
   fetchList();
 }
@@ -130,83 +161,126 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4">
-    <Card title="脱敏策略">
-      <template #extra>
-        <Space>
-          <InputNumber
-            v-model:value="filterDatasourceId"
-            placeholder="按数据源ID筛选"
-            :min="1"
-            style="width: 180px"
-            @press-enter="handleFilter"
-          />
-          <Button @click="handleFilter">筛选</Button>
-          <Button type="primary" @click="showCreate">新建策略</Button>
-        </Space>
-      </template>
-      <Table
-        :columns="columns"
-        :data-source="dataList"
-        :loading="loading"
-        row-key="id"
-        :scroll="{ x: 1000 }"
-      >
-        <template #bodyCell="{ column, record: _record }">
-          <template v-if="column.key === 'enabled'">
-            <Tag :color="(_record as any).enabled ? 'green' : 'default'">
-              {{ (_record as any).enabled ? '已启用' : '已禁用' }}
-            </Tag>
-          </template>
-          <template v-if="column.key === 'action'">
-            <Space>
-              <Button type="link" size="small" @click="showEdit(_record as MaskingPolicy)">编辑</Button>
-              <Button
-                type="link"
-                size="small"
-                @click="handleToggle(_record as MaskingPolicy)"
-              >
-                {{ (_record as any).enabled ? '禁用' : '启用' }}
-              </Button>
-              <Button type="link" size="small" danger @click="handleDelete(_record as MaskingPolicy)">删除</Button>
-            </Space>
-          </template>
+  <DataPage
+    description="配置敏感数据保护，保留策略与执行记录。"
+    title="脱敏策略"
+  >
+    <template #extra>
+      <Space>
+        <InputNumber
+          v-model:value="filterDatasourceId"
+          placeholder="按数据源ID筛选"
+          :min="1"
+          style="width: 180px"
+          @press-enter="handleFilter"
+        />
+        <Button @click="handleFilter">筛选</Button>
+        <Button type="primary" @click="showCreate">新建策略</Button>
+      </Space>
+    </template>
+    <Table
+      :columns="columns"
+      :data-source="dataList"
+      :loading="loading"
+      row-key="id"
+      :scroll="{ x: 1000 }"
+    >
+      <template #bodyCell="{ column, record: _record }">
+        <template v-if="column.key === 'enabled'">
+          <Tag :color="(_record as any).enabled ? 'green' : 'default'">
+            {{ (_record as any).enabled ? '已启用' : '已禁用' }}
+          </Tag>
         </template>
-      </Table>
-    </Card>
+        <template v-if="column.key === 'action'">
+          <Space>
+            <Button
+              type="link"
+              size="small"
+              @click="showEdit(_record as MaskingPolicy)"
+              >编辑</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              @click="handleToggle(_record as MaskingPolicy)"
+            >
+              {{ (_record as any).enabled ? '禁用' : '启用' }}
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              danger
+              @click="handleDelete(_record as MaskingPolicy)"
+              >删除</Button
+            >
+          </Space>
+        </template>
+      </template>
+    </Table>
+
     <Modal
+      :mask-closable="false"
+      :confirm-loading="pageRequestState.writePending > 0"
       v-model:open="modalVisible"
       :title="editingId ? '编辑策略' : '新建策略'"
       :destroy-on-close="true"
       width="600px"
       @ok="handleSubmit"
     >
-      <Form layout="vertical">
+      <Form
+        :disabled="
+          pageRequestState.writePending > 0 ||
+          Object.keys(pageRequestState.failures).length > 0
+        "
+        layout="vertical"
+      >
         <FormItem label="策略名称" required>
           <Input v-model:value="formState.name" placeholder="请输入策略名称" />
         </FormItem>
         <FormItem label="数据源ID">
-          <InputNumber v-model:value="formState.datasourceId" :min="1" placeholder="请输入数据源ID" style="width: 100%" />
+          <InputNumber
+            v-model:value="formState.datasourceId"
+            :min="1"
+            placeholder="请输入数据源ID"
+            style="width: 100%"
+          />
         </FormItem>
         <FormItem label="表名" required>
           <Input v-model:value="formState.tableName" placeholder="请输入表名" />
         </FormItem>
         <FormItem label="列名" required>
-          <Input v-model:value="formState.columnName" placeholder="请输入列名" />
+          <Input
+            v-model:value="formState.columnName"
+            placeholder="请输入列名"
+          />
         </FormItem>
         <FormItem label="规则ID">
-          <InputNumber v-model:value="formState.ruleId" :min="1" placeholder="请输入关联的规则ID" style="width: 100%" />
+          <InputNumber
+            v-model:value="formState.ruleId"
+            :min="1"
+            placeholder="请输入关联的规则ID"
+            style="width: 100%"
+          />
         </FormItem>
         <FormItem label="启用">
           <Switch v-model:checked="formState.enabled" />
         </FormItem>
         <FormItem label="优先级">
-          <InputNumber v-model:value="formState.priority" :min="0" placeholder="数字越小优先级越高" style="width: 100%" />
+          <InputNumber
+            v-model:value="formState.priority"
+            :min="0"
+            placeholder="数字越小优先级越高"
+            style="width: 100%"
+          />
         </FormItem>
         <FormItem label="描述">
-          <Textarea v-model:value="formState.description" :rows="3" placeholder="策略描述" />
+          <Textarea
+            v-model:value="formState.description"
+            :rows="3"
+            placeholder="策略描述"
+          />
         </FormItem>
       </Form>
     </Modal>
-  </div>
+  </DataPage>
 </template>

@@ -1,6 +1,20 @@
 <script lang="ts" setup>
+const pageRequestState = pageState();
+import { pageState } from '#/components/data-page/request-state';
+import DataPage from '#/components/data-page/index.vue';
 import { ref, onMounted, reactive } from 'vue';
-import { Card, Form, FormItem, Input, InputNumber, Select, SelectOption, Button, Textarea, Space, message } from 'ant-design-vue';
+import {
+  Form,
+  FormItem,
+  Input,
+  InputNumber,
+  Select,
+  SelectOption,
+  Button,
+  Textarea,
+  Space,
+  message,
+} from 'ant-design-vue';
 import { useRouter, useRoute } from 'vue-router';
 import { createConfig, updateConfig, getConfig } from '../api/apiConfig';
 
@@ -20,6 +34,7 @@ const formState = reactive({
   description: '',
 });
 
+/** 校验并提交当前表单，失败保留输入。 Validate and submit the current form while retaining input on failure. */
 async function handleSubmit() {
   if (!formState.name || !formState.path) {
     message.error('API名称和路径不能为空');
@@ -54,46 +69,89 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-4">
-    <Card :title="editId ? '编辑API配置' : '新建API配置'">
-      <Form layout="vertical" style="max-width: 600px;">
-        <FormItem label="API名称" required>
-          <Input v-model:value="formState.name" placeholder="请输入API名称" />
-        </FormItem>
-        <FormItem label="请求路径" required>
-          <Input v-model:value="formState.path" placeholder="例如: /api/v1/users" />
-        </FormItem>
-        <FormItem label="请求方法">
-          <Select v-model:value="formState.method">
-            <SelectOption value="GET">GET</SelectOption>
-            <SelectOption value="POST">POST</SelectOption>
-          </Select>
-        </FormItem>
-        <FormItem label="数据源ID">
-          <InputNumber v-model:value="formState.datasourceId" :min="1" style="width: 100%;" placeholder="关联的数据源ID" />
-        </FormItem>
-        <FormItem label="SQL内容">
-          <Textarea v-model:value="formState.sqlContent" :rows="6" placeholder="SELECT * FROM table WHERE id = :id" style="font-family: monospace;" />
-        </FormItem>
-        <FormItem label="参数配置 (JSON)">
-          <Textarea v-model:value="formState.paramConfig" :rows="4" placeholder='[{"name":"id","type":"int","required":true}]' style="font-family: monospace;" />
-        </FormItem>
-        <FormItem label="限流 (次/分钟)">
-          <InputNumber v-model:value="formState.rateLimit" :min="0" style="width: 100%;" />
-        </FormItem>
-        <FormItem label="缓存TTL (秒)">
-          <InputNumber v-model:value="formState.cacheTtl" :min="0" style="width: 100%;" />
-        </FormItem>
-        <FormItem label="描述">
-          <Textarea v-model:value="formState.description" :rows="2" placeholder="API描述" />
-        </FormItem>
-        <FormItem>
-          <Space>
-            <Button type="primary" @click="handleSubmit">{{ editId ? '更新' : '创建' }}</Button>
-            <Button @click="router.back()">取消</Button>
-          </Space>
-        </FormItem>
-      </Form>
-    </Card>
-  </div>
+  <DataPage
+    description="把可信数据转化为可管理的服务接口。"
+    :title="editId ? '编辑API配置' : '新建API配置'"
+  >
+    <Form
+      :disabled="
+        pageRequestState.writePending > 0 ||
+        Object.keys(pageRequestState.failures).length > 0
+      "
+      layout="vertical"
+      style="max-width: 600px"
+    >
+      <FormItem label="API名称" required>
+        <Input v-model:value="formState.name" placeholder="请输入API名称" />
+      </FormItem>
+      <FormItem label="请求路径" required>
+        <Input
+          v-model:value="formState.path"
+          placeholder="例如: /api/v1/users"
+        />
+      </FormItem>
+      <FormItem label="请求方法">
+        <Select v-model:value="formState.method">
+          <SelectOption value="GET">GET</SelectOption>
+          <SelectOption value="POST">POST</SelectOption>
+        </Select>
+      </FormItem>
+      <FormItem label="数据源ID">
+        <InputNumber
+          v-model:value="formState.datasourceId"
+          :min="1"
+          style="width: 100%"
+          placeholder="关联的数据源ID"
+        />
+      </FormItem>
+      <FormItem label="SQL内容">
+        <Textarea
+          v-model:value="formState.sqlContent"
+          :rows="6"
+          placeholder="SELECT * FROM table WHERE id = :id"
+          style="font-family: monospace"
+        />
+      </FormItem>
+      <FormItem label="参数配置 (JSON)">
+        <Textarea
+          v-model:value="formState.paramConfig"
+          :rows="4"
+          placeholder='[{"name":"id","type":"int","required":true}]'
+          style="font-family: monospace"
+        />
+      </FormItem>
+      <FormItem label="限流 (次/分钟)">
+        <InputNumber
+          v-model:value="formState.rateLimit"
+          :min="0"
+          style="width: 100%"
+        />
+      </FormItem>
+      <FormItem label="缓存TTL (秒)">
+        <InputNumber
+          v-model:value="formState.cacheTtl"
+          :min="0"
+          style="width: 100%"
+        />
+      </FormItem>
+      <FormItem label="描述">
+        <Textarea
+          v-model:value="formState.description"
+          :rows="2"
+          placeholder="API描述"
+        />
+      </FormItem>
+      <FormItem>
+        <Space>
+          <Button
+            :loading="pageRequestState.writePending > 0"
+            type="primary"
+            @click="handleSubmit"
+            >{{ editId ? '更新' : '创建' }}</Button
+          >
+          <Button @click="router.back()">取消</Button>
+        </Space>
+      </FormItem>
+    </Form>
+  </DataPage>
 </template>

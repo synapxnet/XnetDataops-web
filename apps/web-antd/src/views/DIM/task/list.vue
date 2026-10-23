@@ -1,8 +1,13 @@
 <script lang="ts" setup>
+import DataPage from '#/components/data-page/index.vue';
 import { ref, onMounted } from 'vue';
-import { Card, Table, Button, Tag, Space, Modal, message } from 'ant-design-vue';
+import { Table, Button, Tag, Space, Modal, message } from 'ant-design-vue';
 import { useRouter } from 'vue-router';
-import { getSyncTasks, deleteSyncTask, updateTaskStatus } from '../api/syncTask';
+import {
+  getSyncTasks,
+  deleteSyncTask,
+  updateTaskStatus,
+} from '../api/syncTask';
 import type { SyncTask } from '../api/types';
 
 const router = useRouter();
@@ -28,6 +33,7 @@ const statusColorMap: Record<string, string> = {
   error: 'red',
 };
 
+/** 载入当前条件下的列表并维护加载状态。 Load the list for the current filters and maintain loading state. */
 async function fetchList() {
   loading.value = true;
   try {
@@ -40,6 +46,7 @@ async function fetchList() {
   }
 }
 
+/** 更新状态筛选并查询。 Update the status filter and reload. */
 async function handleStatusChange(record: SyncTask, status: string) {
   try {
     await updateTaskStatus(record.id, status);
@@ -50,6 +57,7 @@ async function handleStatusChange(record: SyncTask, status: string) {
   }
 }
 
+/** 确认后删除选中记录。 Delete the selected record after confirmation. */
 function handleDelete(record: SyncTask) {
   Modal.confirm({
     title: '确认删除',
@@ -62,38 +70,79 @@ function handleDelete(record: SyncTask) {
         fetchList();
       } catch (e: any) {
         message.error('删除失败: ' + e.message);
+
+        throw e;
       }
     },
   });
 }
 
-onMounted(() => { fetchList(); });
+onMounted(() => {
+  fetchList();
+});
 </script>
 
 <template>
-  <div class="p-4">
-    <Card title="同步任务列表">
-      <template #extra>
-        <Button type="primary" @click="router.push('/DIM/task/create')">创建任务</Button>
-      </template>
-      <Table :columns="columns" :data-source="dataList" :loading="loading" row-key="id" :scroll="{ x: 1300 }">
-        <template #bodyCell="{ column, record: _record }">
-          <template v-if="column.key === 'syncMode'">
-            <Tag :color="(_record as any).syncMode === 'full' ? 'blue' : 'green'">{{ (_record as any).syncMode === 'full' ? '全量' : '增量' }}</Tag>
-          </template>
-          <template v-if="column.key === 'status'">
-            <Tag :color="statusColorMap[(_record as any).status] || 'default'">{{ (_record as any).status }}</Tag>
-          </template>
-          <template v-if="column.key === 'action'">
-            <Space>
-              <Button type="link" size="small" @click="handleStatusChange(_record as SyncTask, 'online')" v-if="(_record as any).status !== 'online'">上线</Button>
-              <Button type="link" size="small" @click="handleStatusChange(_record as SyncTask, 'offline')" v-if="(_record as any).status === 'online'">下线</Button>
-              <Button type="link" size="small" @click="router.push(`/DIM/task/log/${(_record as any).id}`)">日志</Button>
-              <Button type="link" size="small" danger @click="handleDelete(_record as SyncTask)">删除</Button>
-            </Space>
-          </template>
+  <DataPage
+    description="把数据从来源送达目标，跟踪每次同步与执行记录。"
+    title="同步任务列表"
+  >
+    <template #extra>
+      <Button type="primary" @click="router.push('/DIM/task/create')"
+        >创建任务</Button
+      >
+    </template>
+    <Table
+      :columns="columns"
+      :data-source="dataList"
+      :loading="loading"
+      row-key="id"
+      :scroll="{ x: 1300 }"
+    >
+      <template #bodyCell="{ column, record: _record }">
+        <template v-if="column.key === 'syncMode'">
+          <Tag
+            :color="(_record as any).syncMode === 'full' ? 'blue' : 'green'"
+            >{{ (_record as any).syncMode === 'full' ? '全量' : '增量' }}</Tag
+          >
         </template>
-      </Table>
-    </Card>
-  </div>
+        <template v-if="column.key === 'status'">
+          <Tag :color="statusColorMap[(_record as any).status] || 'default'">{{
+            (_record as any).status
+          }}</Tag>
+        </template>
+        <template v-if="column.key === 'action'">
+          <Space>
+            <Button
+              type="link"
+              size="small"
+              @click="handleStatusChange(_record as SyncTask, 'online')"
+              v-if="(_record as any).status !== 'online'"
+              >上线</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              @click="handleStatusChange(_record as SyncTask, 'offline')"
+              v-if="(_record as any).status === 'online'"
+              >下线</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              @click="router.push(`/DIM/task/log/${(_record as any).id}`)"
+              >日志</Button
+            >
+            <Button
+              type="link"
+              size="small"
+              danger
+              @click="handleDelete(_record as SyncTask)"
+              >删除</Button
+            >
+          </Space>
+        </template>
+      </template>
+    </Table>
+  </DataPage>
 </template>

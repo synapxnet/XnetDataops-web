@@ -1,6 +1,14 @@
 <script lang="ts" setup>
+import DataPage from '#/components/data-page/index.vue';
 import { ref, onMounted } from 'vue';
-import { Card, Table, Tag, Button, Descriptions, DescriptionsItem, message } from 'ant-design-vue';
+import {
+  Table,
+  Tag,
+  Button,
+  Descriptions,
+  DescriptionsItem,
+  message,
+} from 'ant-design-vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getAsset, getAccessRecords } from '../api/dataAsset';
 import type { DataAsset, AssetAccessRecord } from '../api/types';
@@ -50,41 +58,75 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-4">
-    <Card :title="`资产详情 - ${asset?.name || ''}`">
-      <template #extra><Button @click="router.back()">返回</Button></template>
-      <Descriptions bordered v-if="asset" :column="2" class="mb-4">
-        <DescriptionsItem label="资产名称">{{ asset.name }}</DescriptionsItem>
-        <DescriptionsItem label="UID">{{ asset.uid }}</DescriptionsItem>
-        <DescriptionsItem label="资产类型">{{ asset.assetType }}</DescriptionsItem>
-        <DescriptionsItem label="业务域">{{ asset.domain }}</DescriptionsItem>
-        <DescriptionsItem label="分类">{{ asset.category }}</DescriptionsItem>
-        <DescriptionsItem label="所有者">{{ asset.owner }}</DescriptionsItem>
-        <DescriptionsItem label="访问级别">
-          <Tag :color="accessLevelColorMap[asset.accessLevel] || 'default'">{{ asset.accessLevel }}</Tag>
-        </DescriptionsItem>
-        <DescriptionsItem label="状态">
-          <Tag :color="statusColorMap[asset.status] || 'default'">{{ asset.status }}</Tag>
-        </DescriptionsItem>
-        <DescriptionsItem label="关联表名">{{ asset.tableName }}</DescriptionsItem>
-        <DescriptionsItem label="数据源ID">{{ asset.datasourceId }}</DescriptionsItem>
-        <DescriptionsItem label="行数">{{ asset.rowCount?.toLocaleString() }}</DescriptionsItem>
-        <DescriptionsItem label="数据大小">{{ asset.dataSizeBytes?.toLocaleString() }} Bytes</DescriptionsItem>
-        <DescriptionsItem label="质量评分">{{ asset.qualityScore }}</DescriptionsItem>
-        <DescriptionsItem label="最后采集时间">{{ asset.lastProfiledAt }}</DescriptionsItem>
-        <DescriptionsItem label="创建者">{{ asset.createdBy }}</DescriptionsItem>
-        <DescriptionsItem label="创建时间">{{ asset.createdAt }}</DescriptionsItem>
-        <DescriptionsItem label="描述" :span="2">{{ asset.description }}</DescriptionsItem>
-      </Descriptions>
+  <DataPage
+    description="发现可用资产，整理分类与使用信息。"
+    :title="`资产详情 - ${asset?.name || ''}`"
+  >
+    <template #extra><Button @click="router.back()">返回</Button></template>
+    <Descriptions bordered v-if="asset" :column="2" class="mb-4">
+      <DescriptionsItem label="资产名称">{{ asset.name }}</DescriptionsItem>
+      <DescriptionsItem label="UID">{{ asset.uid }}</DescriptionsItem>
+      <DescriptionsItem label="资产类型">{{
+        asset.assetType
+      }}</DescriptionsItem>
+      <DescriptionsItem label="业务域">{{ asset.domain }}</DescriptionsItem>
+      <DescriptionsItem label="分类">{{ asset.category }}</DescriptionsItem>
+      <DescriptionsItem label="所有者">{{ asset.owner }}</DescriptionsItem>
+      <DescriptionsItem label="访问级别">
+        <Tag :color="accessLevelColorMap[asset.accessLevel] || 'default'">{{
+          asset.accessLevel
+        }}</Tag>
+      </DescriptionsItem>
+      <DescriptionsItem label="状态">
+        <Tag :color="statusColorMap[asset.status] || 'default'">{{
+          asset.status
+        }}</Tag>
+      </DescriptionsItem>
+      <DescriptionsItem label="关联表名">{{
+        asset.tableName
+      }}</DescriptionsItem>
+      <DescriptionsItem label="数据源ID">{{
+        asset.datasourceId
+      }}</DescriptionsItem>
+      <DescriptionsItem label="行数">{{
+        asset.rowCount?.toLocaleString()
+      }}</DescriptionsItem>
+      <DescriptionsItem label="数据大小"
+        >{{ asset.dataSizeBytes?.toLocaleString() }} Bytes</DescriptionsItem
+      >
+      <DescriptionsItem label="质量评分">{{
+        asset.qualityScore
+      }}</DescriptionsItem>
+      <DescriptionsItem label="最后采集时间">{{
+        asset.lastProfiledAt
+      }}</DescriptionsItem>
+      <DescriptionsItem label="创建者">{{ asset.createdBy }}</DescriptionsItem>
+      <DescriptionsItem label="创建时间">{{
+        asset.createdAt
+      }}</DescriptionsItem>
+      <DescriptionsItem label="描述" :span="2">{{
+        asset.description
+      }}</DescriptionsItem>
+    </Descriptions>
 
-      <h4 class="mb-2">访问记录:</h4>
-      <Table :columns="accessColumns" :data-source="accessRecords" row-key="id" size="small">
-        <template #bodyCell="{ column, record: _record }">
-          <template v-if="column.key === 'accessType'">
-            <Tag :color="accessTypeColorMap[(_record as any).accessType] || 'default'">{{ (_record as any).accessType }}</Tag>
-          </template>
+    <h4 class="mb-2">访问记录:</h4>
+    <Table
+      :scroll="{ x: 'max-content' }"
+      :columns="accessColumns"
+      :data-source="accessRecords"
+      row-key="id"
+      size="small"
+    >
+      <template #bodyCell="{ column, record: _record }">
+        <template v-if="column.key === 'accessType'">
+          <Tag
+            :color="
+              accessTypeColorMap[(_record as any).accessType] || 'default'
+            "
+            >{{ (_record as any).accessType }}</Tag
+          >
         </template>
-      </Table>
-    </Card>
-  </div>
+      </template>
+    </Table>
+  </DataPage>
 </template>

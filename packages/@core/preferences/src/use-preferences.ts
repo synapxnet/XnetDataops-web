@@ -1,11 +1,14 @@
 import { computed } from 'vue';
+import { usePreferredDark } from '@vueuse/core';
 
 import { diff } from '@vben-core/shared/utils';
 
 import { preferencesManager } from './preferences';
 import { isDarkTheme } from './update-css-variables';
 
+/** 派生响应式界面偏好，并在自动模式跟随系统明暗。 Derive reactive layout preferences and follow system appearance in automatic mode. */
 function usePreferences() {
+  const systemDark = usePreferredDark();
   const preferences = preferencesManager.getPreferences();
   const initialPreferences = preferencesManager.getInitialPreferences();
   /**
@@ -25,7 +28,9 @@ function usePreferences() {
    * @returns 如果主题为暗黑模式，返回 true，否则返回 false。
    */
   const isDark = computed(() => {
-    return isDarkTheme(preferences.theme.mode);
+    return preferences.theme.mode === 'auto'
+      ? systemDark.value
+      : isDarkTheme(preferences.theme.mode);
   });
 
   const locale = computed(() => {

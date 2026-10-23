@@ -1,7 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router';
 
-import { IFrameView } from '#/layouts';
-
 const routes: RouteRecordRaw[] = [
   {
     meta: {
@@ -15,30 +13,30 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'OpenXnet',
         path: '/synapxnet/openxnet',
-        component: IFrameView,
+        component: () => import('#/views/_core/about/external.vue'),
         meta: {
           icon: 'lucide:book-open-text',
-          link: 'https://openxnet.synapxnet.com',
+          externalResource: 'https://openxnet.synapxnet.com',
           title: 'OpenXnet 开源社区',
         },
       },
       {
         name: 'XnetDataopsWebRepository',
         path: '/synapxnet/frontend',
-        component: IFrameView,
+        component: () => import('#/views/_core/about/external.vue'),
         meta: {
           icon: 'mdi:github',
-          link: 'https://github.com/synapxnet/XnetDataops-web',
+          externalResource: 'https://github.com/synapxnet/XnetDataops-web',
           title: '前端仓库',
         },
       },
       {
         name: 'XnetDataopsRepository',
         path: '/synapxnet/backend',
-        component: IFrameView,
+        component: () => import('#/views/_core/about/external.vue'),
         meta: {
           icon: 'mdi:github',
-          link: 'https://github.com/synapxnet/XnetDataops',
+          externalResource: 'https://github.com/synapxnet/XnetDataops',
           title: '后端仓库',
         },
       },

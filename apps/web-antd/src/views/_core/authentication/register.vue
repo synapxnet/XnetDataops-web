@@ -1,96 +1,48 @@
-<script lang="ts" setup>
-import type { VbenFormSchema } from '@vben/common-ui';
-import type { Recordable } from '@vben/types';
-
-import { computed, h, ref } from 'vue';
-
-import { AuthenticationRegister, z } from '@vben/common-ui';
-import { $t } from '@vben/locales';
-
-defineOptions({ name: 'Register' });
-
-const loading = ref(false);
-
-const formSchema = computed((): VbenFormSchema[] => {
-  return [
-    {
-      component: 'VbenInput',
-      componentProps: {
-        placeholder: $t('authentication.usernameTip'),
-      },
-      fieldName: 'username',
-      label: $t('authentication.username'),
-      rules: z.string().min(1, { message: $t('authentication.usernameTip') }),
-    },
-    {
-      component: 'VbenInputPassword',
-      componentProps: {
-        passwordStrength: true,
-        placeholder: $t('authentication.password'),
-      },
-      fieldName: 'password',
-      label: $t('authentication.password'),
-      renderComponentContent() {
-        return {
-          strengthText: () => $t('authentication.passwordStrength'),
-        };
-      },
-      rules: z.string().min(1, { message: $t('authentication.passwordTip') }),
-    },
-    {
-      component: 'VbenInputPassword',
-      componentProps: {
-        placeholder: $t('authentication.confirmPassword'),
-      },
-      dependencies: {
-        rules(values) {
-          const { password } = values;
-          return z
-            .string({ required_error: $t('authentication.passwordTip') })
-            .min(1, { message: $t('authentication.passwordTip') })
-            .refine((value) => value === password, {
-              message: $t('authentication.confirmPasswordTip'),
-            });
-        },
-        triggerFields: ['password'],
-      },
-      fieldName: 'confirmPassword',
-      label: $t('authentication.confirmPassword'),
-    },
-    {
-      component: 'VbenCheckbox',
-      fieldName: 'agreePolicy',
-      renderComponentContent: () => ({
-        default: () =>
-          h('span', [
-            $t('authentication.agree'),
-            h(
-              'a',
-              {
-                class: 'vben-link ml-1 ',
-                href: '',
-              },
-              `${$t('authentication.privacyPolicy')} & ${$t('authentication.terms')}`,
-            ),
-          ]),
-      }),
-      rules: z.boolean().refine((value) => !!value, {
-        message: $t('authentication.agreeTip'),
-      }),
-    },
-  ];
-});
-
-function handleSubmit(value: Recordable<any>) {
-  // eslint-disable-next-line no-console
-  console.log('register submit:', value);
-}
+<!--
+Copyright (C) 2026 Synapxnet. All rights reserved.
+This file is Synapxnet Proprietary and Confidential. It is strictly
+forbidden to copy, distribute, or use without explicit authorization.
+用途：账户入口与能力说明。Purpose: Account entry and truthful capability status.
+Author: maoyo | Department: 研发部 | Date: 2026-09-13 | Version: 1.0.0 | Security Level: INTERNAL
+__version__: 1.0.0 | __author__: maoyo | __copyright__: Copyright 2026 Synapxnet
+__maintainer__: maoyo | __email__: synapxnet@gmail.com
+-->
+<script setup lang="ts">
+import { useRouter } from 'vue-router';
+import { Button } from 'ant-design-vue';
+const router = useRouter();
 </script>
-
 <template>
-  <AuthenticationRegister
-    :form-schema="formSchema"
-    :loading="loading"
-    @submit="handleSubmit"
-  />
+  <section class="account-help">
+    <h1>开通企业数据工作空间</h1>
+    <p>
+      当前平台由组织管理员开通账号与团队访问权限。请联系所在组织管理员完成邀请，再使用手机号验证码登录。
+    </p>
+    <Button type="primary" size="large" @click="router.push('/auth/login')"
+      >使用手机号登录</Button
+    >
+  </section>
 </template>
+<style scoped>
+.account-help {
+  max-width: 420px;
+  margin: auto;
+}
+.account-help > span {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: hsl(var(--primary));
+  font-weight: 700;
+}
+.account-help h1 {
+  font-size: 22px;
+  font-weight: 650;
+  margin: 16px 0;
+}
+.account-help p {
+  font-size: 14px;
+  line-height: 1.9;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 20px;
+}
+</style>
